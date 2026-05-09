@@ -12,32 +12,32 @@ export type ImageLayer = {
   y: number;
   width: number;
   height: number;
-  naturalWidth: number;
-  naturalHeight: number;
+  rotation: number;
+  opacity: number;
 };
 
 export type StrokeLayer = {
   id: string;
   type: 'stroke';
-  name: string;
-  points: CanvasPoint[];
   color: string;
   size: number;
+  points: CanvasPoint[];
 };
 
 export type CanvasLayer = ImageLayer | StrokeLayer;
 
-export type CanvasTool = 'select' | 'pan' | 'brush' | 'eraser' | 'image';
+export type CanvasTool = 'select' | 'brush' | 'capture';
 
 export type CaptureItem = {
   id: string;
   name: string;
-  imageUrl: string;
-  thumbnailUrl?: string;
+  src: string;
+  createdAt: string;
 };
 
 export type GenerationResponse = {
   imageUrl: string;
-  prompt?: string;
-  captures?: CaptureItem[];
+  taskId: string;
+  confidence: 'high' | 'low';
+  transparentPixelRatio: number;
 };

@@ -76,8 +76,8 @@ export const createImageLayer = ({
     y: dropPoint.y - height / 2,
     width,
     height,
-    naturalWidth,
-    naturalHeight,
+    rotation: 0,
+    opacity: 1,
   };
 };
 

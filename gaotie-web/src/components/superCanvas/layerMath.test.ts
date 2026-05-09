@@ -26,7 +26,11 @@ describe('layerMath', () => {
       y: 240,
       width: 240,
       height: 120,
+      rotation: 0,
+      opacity: 1,
     });
+    expect(layer).not.toHaveProperty('naturalWidth');
+    expect(layer).not.toHaveProperty('naturalHeight');
   });
 
   it('scales an image layer around its center', () => {
