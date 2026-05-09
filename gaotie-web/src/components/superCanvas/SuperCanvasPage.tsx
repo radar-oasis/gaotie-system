@@ -34,6 +34,7 @@ const CANVAS_HEIGHT = 820;
 const MIN_PANEL_WIDTH = 220;
 const MAX_PANEL_WIDTH = 420;
 const MIN_CAPTURE_SIZE = 8;
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 type DragAsset = {
   name: string;
@@ -75,6 +76,38 @@ const normalizeRect = (draft: CaptureDraft) => {
   return { x, y, width, height };
 };
 
+const parseDragAsset = (serializedAsset: string): DragAsset | null => {
+  try {
+    const parsed = JSON.parse(serializedAsset) as unknown;
+
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      !('name' in parsed) ||
+      !('src' in parsed)
+    ) {
+      return null;
+    }
+
+    const { name, src } = parsed;
+
+    if (typeof name !== 'string' || typeof src !== 'string') {
+      return null;
+    }
+
+    const trimmedName = name.trim();
+    const trimmedSrc = src.trim();
+
+    if (!trimmedName || !trimmedSrc) {
+      return null;
+    }
+
+    return { name: trimmedName, src: trimmedSrc };
+  } catch {
+    return null;
+  }
+};
+
 export default function SuperCanvasPage() {
   const { selectedPatterns } = useImageSearch();
   const [layers, setLayers] = useState<CanvasLayer[]>([]);
@@ -98,6 +131,7 @@ export default function SuperCanvasPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const activeStrokeIdRef = useRef<string | null>(null);
+  const resizeCleanupRef = useRef<(() => void) | null>(null);
 
   const selectedLayer = useMemo(
     () => layers.find((layer) => layer.id === selectedLayerId) ?? null,
@@ -167,10 +201,15 @@ export default function SuperCanvasPage() {
 
   const startPanelResize = useCallback(
     (side: 'left' | 'right') => (event: ReactPointerEvent<HTMLButtonElement>) => {
+      resizeCleanupRef.current?.();
+
       const startX = event.clientX;
       const startWidth = side === 'left' ? leftWidth : rightWidth;
+      const resizeTarget = event.currentTarget;
+      const pointerId = event.pointerId;
+      let isCleanedUp = false;
 
-      event.currentTarget.setPointerCapture(event.pointerId);
+      resizeTarget.setPointerCapture(pointerId);
 
       const handlePointerMove = (moveEvent: PointerEvent) => {
         const delta = moveEvent.clientX - startX;
@@ -185,13 +224,31 @@ export default function SuperCanvasPage() {
         }
       };
 
-      const handlePointerUp = () => {
+      const cleanupResize = () => {
+        if (isCleanedUp) {
+          return;
+        }
+
+        isCleanedUp = true;
         window.removeEventListener('pointermove', handlePointerMove);
-        window.removeEventListener('pointerup', handlePointerUp);
+        window.removeEventListener('pointerup', cleanupResize);
+        window.removeEventListener('pointercancel', cleanupResize);
+
+        try {
+          resizeTarget.releasePointerCapture(pointerId);
+        } catch {
+          // Pointer capture may already be gone after cancel/unmount.
+        }
+
+        if (resizeCleanupRef.current === cleanupResize) {
+          resizeCleanupRef.current = null;
+        }
       };
 
       window.addEventListener('pointermove', handlePointerMove);
-      window.addEventListener('pointerup', handlePointerUp);
+      window.addEventListener('pointerup', cleanupResize);
+      window.addEventListener('pointercancel', cleanupResize);
+      resizeCleanupRef.current = cleanupResize;
     },
     [leftWidth, rightWidth],
   );
@@ -213,7 +270,13 @@ export default function SuperCanvasPage() {
     }
 
     try {
-      const asset = JSON.parse(serializedAsset) as DragAsset;
+      const asset = parseDragAsset(serializedAsset);
+
+      if (!asset) {
+        setStatusMessage('拖入素材数据无效');
+        return;
+      }
+
       const canvasRect = stageRef.current.getBoundingClientRect();
       const dropPoint = resolveDropPoint({
         clientX: event.clientX,
@@ -233,6 +296,18 @@ export default function SuperCanvasPage() {
     const file = event.target.files?.[0];
 
     if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setStatusMessage('仅支持图片文件');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setStatusMessage('图片不能超过 20 MB');
+      event.target.value = '';
       return;
     }
 
@@ -506,6 +581,13 @@ export default function SuperCanvasPage() {
 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleDeleteSelected, moveSelected, scaleSelectedLayer]);
+
+  useEffect(
+    () => () => {
+      resizeCleanupRef.current?.();
+    },
+    [],
+  );
 
   const captureRect = captureDraft ? normalizeRect(captureDraft) : null;
   const canvasStyle: CSSProperties = {
