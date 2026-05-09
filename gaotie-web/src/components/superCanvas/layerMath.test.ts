@@ -82,13 +82,68 @@ describe('layerMath', () => {
       bottom: 62,
     });
   });
+
+  it('rejects invalid natural image dimensions', () => {
+    const createLayer = (naturalWidth: number, naturalHeight: number) =>
+      createImageLayer({
+        id: 'layer-1',
+        name: 'invalid',
+        src: '/images/a.png',
+        dropPoint: { x: 50, y: 50 },
+        naturalWidth,
+        naturalHeight,
+      });
+
+    expect(() => createLayer(0, 100)).toThrow(
+      'Image natural dimensions must be finite positive numbers.',
+    );
+    expect(() => createLayer(100, -1)).toThrow(
+      'Image natural dimensions must be finite positive numbers.',
+    );
+    expect(() => createLayer(Number.NaN, 100)).toThrow(
+      'Image natural dimensions must be finite positive numbers.',
+    );
+    expect(() => createLayer(100, Number.POSITIVE_INFINITY)).toThrow(
+      'Image natural dimensions must be finite positive numbers.',
+    );
+  });
+
+  it('rejects zero, negative, and non-finite image scale values', () => {
+    const layer = createImageLayer({
+      id: 'layer-1',
+      name: '纹样',
+      src: '/images/a.png',
+      dropPoint: { x: 100, y: 100 },
+      naturalWidth: 100,
+      naturalHeight: 100,
+    });
+
+    expect(() => scaleImageLayer(layer, 0)).toThrow(
+      'Image scale must be a finite positive number.',
+    );
+    expect(() => scaleImageLayer(layer, -1)).toThrow(
+      'Image scale must be a finite positive number.',
+    );
+    expect(() => scaleImageLayer(layer, Number.NaN)).toThrow(
+      'Image scale must be a finite positive number.',
+    );
+    expect(() => scaleImageLayer(layer, Number.NEGATIVE_INFINITY)).toThrow(
+      'Image scale must be a finite positive number.',
+    );
+  });
 });
 
 describe('resolveBackendImageUrl', () => {
-  it('leaves empty, data, and absolute http URLs unchanged', () => {
+  it('leaves empty, data, blob, protocol-relative, and absolute http URLs unchanged', () => {
     expect(resolveBackendImageUrl('')).toBe('');
     expect(resolveBackendImageUrl('data:image/png;base64,abc')).toBe(
       'data:image/png;base64,abc',
+    );
+    expect(resolveBackendImageUrl('blob:http://localhost:5173/abc')).toBe(
+      'blob:http://localhost:5173/abc',
+    );
+    expect(resolveBackendImageUrl('//cdn.example.com/a.png')).toBe(
+      '//cdn.example.com/a.png',
     );
     expect(resolveBackendImageUrl('https://example.com/image.png')).toBe(
       'https://example.com/image.png',
@@ -104,6 +159,9 @@ describe('resolveBackendImageUrl', () => {
     );
     expect(resolveBackendImageUrl('foo.png')).toBe(
       'http://localhost:3000/images/foo.png',
+    );
+    expect(resolveBackendImageUrl('/generated/super-canvas/foo.png')).toBe(
+      'http://localhost:3000/generated/super-canvas/foo.png',
     );
   });
 });

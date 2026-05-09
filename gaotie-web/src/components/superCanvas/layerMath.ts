@@ -27,12 +27,28 @@ type ResolveDropPointInput = {
   zoom: number;
 };
 
+const validateNaturalDimensions = (
+  naturalWidth: number,
+  naturalHeight: number,
+): void => {
+  if (
+    !Number.isFinite(naturalWidth) ||
+    !Number.isFinite(naturalHeight) ||
+    naturalWidth <= 0 ||
+    naturalHeight <= 0
+  ) {
+    throw new Error('Image natural dimensions must be finite positive numbers.');
+  }
+};
+
+const validateScale = (scale: number): void => {
+  if (!Number.isFinite(scale) || scale <= 0) {
+    throw new Error('Image scale must be a finite positive number.');
+  }
+};
+
 const getInitialScale = (naturalWidth: number, naturalHeight: number): number => {
   const maxSide = Math.max(naturalWidth, naturalHeight);
-
-  if (maxSide <= 0) {
-    return 1;
-  }
 
   return Math.min(1, MAX_IMAGE_SIDE / maxSide);
 };
@@ -45,6 +61,8 @@ export const createImageLayer = ({
   naturalWidth,
   naturalHeight,
 }: CreateImageLayerInput): ImageLayer => {
+  validateNaturalDimensions(naturalWidth, naturalHeight);
+
   const scale = getInitialScale(naturalWidth, naturalHeight);
   const width = naturalWidth * scale;
   const height = naturalHeight * scale;
@@ -74,6 +92,8 @@ export const scaleImageLayer = (
   layer: ImageLayer,
   scale: number,
 ): ImageLayer => {
+  validateScale(scale);
+
   const centerX = layer.x + layer.width / 2;
   const centerY = layer.y + layer.height / 2;
   const requestedWidth = layer.width * scale;
