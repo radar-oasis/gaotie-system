@@ -65,6 +65,30 @@ describe('layerMath', () => {
     expect(point).toEqual({ x: 70, y: 50 });
   });
 
+  it('rejects zero, negative, and non-finite canvas zoom values', () => {
+    const resolveWithZoom = (zoom: number) =>
+      resolveDropPoint({
+        clientX: 260,
+        clientY: 180,
+        canvasRect: { left: 20, top: 30 },
+        pan: { x: 100, y: 50 },
+        zoom,
+      });
+
+    expect(() => resolveWithZoom(0)).toThrow(
+      'Canvas zoom must be a finite positive number.',
+    );
+    expect(() => resolveWithZoom(-1)).toThrow(
+      'Canvas zoom must be a finite positive number.',
+    );
+    expect(() => resolveWithZoom(Number.NaN)).toThrow(
+      'Canvas zoom must be a finite positive number.',
+    );
+    expect(() => resolveWithZoom(Number.POSITIVE_INFINITY)).toThrow(
+      'Canvas zoom must be a finite positive number.',
+    );
+  });
+
   it('keeps image scaling above the minimum dimension', () => {
     const layer = createImageLayer({
       id: 'layer-1',

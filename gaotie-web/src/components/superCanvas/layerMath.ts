@@ -47,6 +47,12 @@ const validateScale = (scale: number): void => {
   }
 };
 
+const validateZoom = (zoom: number): void => {
+  if (!Number.isFinite(zoom) || zoom <= 0) {
+    throw new Error('Canvas zoom must be a finite positive number.');
+  }
+};
+
 const getInitialScale = (naturalWidth: number, naturalHeight: number): number => {
   const maxSide = Math.max(naturalWidth, naturalHeight);
 
@@ -122,10 +128,10 @@ export const resolveDropPoint = ({
   pan,
   zoom,
 }: ResolveDropPointInput): CanvasPoint => {
-  const safeZoom = zoom || 1;
+  validateZoom(zoom);
 
   return {
-    x: (clientX - canvasRect.left - pan.x) / safeZoom,
-    y: (clientY - canvasRect.top - pan.y) / safeZoom,
+    x: (clientX - canvasRect.left - pan.x) / zoom,
+    y: (clientY - canvasRect.top - pan.y) / zoom,
   };
 };
