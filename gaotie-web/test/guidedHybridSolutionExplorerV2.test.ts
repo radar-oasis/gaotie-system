@@ -7,6 +7,8 @@ interface ExplorerNode {
   id: string;
   type: string;
   selectedAssetId?: string | null;
+  x?: number;
+  y?: number;
 }
 
 interface ExplorerEdge {
@@ -90,6 +92,13 @@ function advanceToTransform(document: Document): void {
   click(document, '[data-action="confirm-patterns"]');
 }
 
+function advanceToCompose(document: Document): void {
+  advanceToTransform(document);
+  click(document, '[data-action="generate-variants"]');
+  click(document, '[data-action="capture-state"]');
+  click(document, '[data-action="confirm-captures"]');
+}
+
 describe('guided hybrid solution explorer v2 HTML prototype', () => {
   it('renders a six-stage standalone workflow at demand analysis', async () => {
     const { document, window } = await loadPrototype();
@@ -168,6 +177,51 @@ describe('guided hybrid solution explorer v2 HTML prototype', () => {
 
     expect(window.prototypeApi.getState().captures).toHaveLength(2);
     expect(document.querySelectorAll('[data-capture-id]')).toHaveLength(2);
+  });
+
+  it('starts the node canvas only at proposal composition with four precise node types', async () => {
+    const { document } = await loadPrototype();
+    advanceToCompose(document);
+
+    expect(document.querySelector('[data-region="function-library"]')).not.toBeNull();
+    expect(document.querySelector('[data-region="node-canvas"]')).not.toBeNull();
+    expect(document.querySelector('[data-add-node="capture"]')).not.toBeNull();
+    expect(document.querySelector('[data-add-node="layout"]')).not.toBeNull();
+    expect(document.querySelector('[data-add-node="palette"]')).not.toBeNull();
+    expect(document.querySelector('[data-add-node="generator"]')).not.toBeNull();
+    expect(document.querySelector('[data-add-node="demand"]')).toBeNull();
+    expect(document.querySelector('[data-add-node="semantic"]')).toBeNull();
+  });
+
+  it('auto-connects typed inputs to a generator and blocks incomplete generation', async () => {
+    const { document, window } = await loadPrototype();
+    advanceToCompose(document);
+
+    click(document, '[data-add-node="generator"]');
+    expect(
+      document.querySelector('[data-action="generate-proposal"]')?.hasAttribute('disabled'),
+    ).toBe(true);
+
+    click(document, '[data-add-node="capture"]');
+    click(document, '[data-add-node="layout"]');
+    click(document, '[data-add-node="palette"]');
+
+    const state = window.prototypeApi.getState();
+    expect(state.explorerNodes.map((node) => node.type)).toEqual([
+      'generator',
+      'capture',
+      'layout',
+      'palette',
+    ]);
+    expect(state.explorerEdges.map((edge) => edge.type).sort()).toEqual([
+      'capture',
+      'layout',
+      'palette',
+    ]);
+    expect(document.querySelectorAll('[data-edge-type]')).toHaveLength(3);
+    expect(
+      document.querySelector('[data-action="generate-proposal"]')?.hasAttribute('disabled'),
+    ).toBe(false);
   });
 });
 
