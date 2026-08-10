@@ -202,6 +202,16 @@
     .layout-option { width: 100%; margin-top: 7px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #475467; text-align: left; font-size: 8px; }
     .layout-option.is-selected { border-color: var(--layout); background: #fff8f1; color: #9a4c0b; }
     .connection-hint { margin-left: 10px; padding: 5px 8px; border-radius: 999px; background: #fff4e8; color: #9a4c0b; font-size: 8px; font-weight: 700; }
+    .prompt-packet { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+    .prompt-images { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 7px; }
+    .prompt-image { height: 58px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: #f6f8fa; }
+    .prompt-image svg { display: block; width: 100%; height: 100%; }
+    .layout-mini { height: 100%; padding: 8px; background: #fff8f1; }
+    .layout-mini span { display: block; height: 5px; margin: 7px 0; border-radius: 999px; background: #e67e22; }
+    .layout-mini span:nth-child(2) { width: 72%; opacity: .45; }
+    .palette-mini { display: grid; grid-template-columns: repeat(2, 1fr); height: 100%; }
+    .composed-prompt { max-height: 118px; overflow: auto; margin-top: 8px; padding: 8px; border-radius: 8px; background: #f7f8fa; color: #475467; font-size: 7px; line-height: 1.55; white-space: pre-wrap; }
+    .button-stack { display: grid; gap: 7px; margin-top: 10px; }
     .placeholder-view { height: 100%; display: grid; place-items: center; color: var(--muted); }
 
     @media (max-width: 1100px) {
@@ -479,7 +489,7 @@
         }
         if (type === 'palette') {
           const paletteId = `palette-${state.paletteAssets.length + 1}`;
-          state.paletteAssets.push({ id: paletteId, title: '待建立的文化主题色板', colors: [], excludedColors: [], searched: false, extracted: false, description: '请检索文化情绪板并提取色板，或上传自己的参考图。' });
+          state.paletteAssets.push({ id: paletteId, title: 'AI 默认文化主题配色', colors: [], excludedColors: [], searched: false, extracted: false, description: '以银白金属色为主体，宫墙朱红用于主要色带，青花蓝作为少量视觉点缀；可继续检索情绪板细化。' });
           node.selectedAssetId = paletteId;
         }
         state.explorerNodes.push(node);
@@ -539,6 +549,35 @@
         </article>`;
       }
 
+      function createOrUpdateProposal(generatorId) {
+        if (!generatorReady(generatorId)) return;
+        const inputs = generatorInputs(generatorId);
+        const capture = state.captures.find(item => item.id === inputs.capture.selectedAssetId);
+        const layout = state.layoutAssets.find(item => item.id === inputs.layout.selectedAssetId) || layoutCatalog[0];
+        const palette = state.paletteAssets.find(item => item.id === inputs.palette.selectedAssetId);
+        const prompt = `为 CR400BF 高速列车生成中国传统文化主题涂装方案。严格保持车体结构、车窗和车门位置，不改变车型。\n纹样视觉状态：采用${capture?.name || '白模截图'}，纹样水平位置 ${capture?.placement?.x || 54}%，尺度 ${Number(capture?.placement?.scale || 1).toFixed(2)}×。\n布局方案：${layout.title}；${layout.description}\n色彩方案：${palette?.description || '以银白金属色为主体，文化色仅作局部点缀。'}\n设计要求：现代、庄重、具有速度感，避免全车满铺，保留大面积银白金属留白。`;
+        const existingIndex = state.proposals.findIndex(item => item.generatorId === generatorId);
+        const proposal = {
+          id: existingIndex >= 0 ? state.proposals[existingIndex].id : `proposal-${state.proposals.length + 1}`,
+          title: `候选方案 ${String.fromCharCode(65 + (existingIndex >= 0 ? existingIndex : state.proposals.length))}`,
+          generatorId,
+          captureId: inputs.capture.selectedAssetId,
+          layoutId: inputs.layout.selectedAssetId,
+          paletteId: inputs.palette.selectedAssetId,
+          promptImages: [inputs.capture.selectedAssetId, inputs.layout.selectedAssetId, inputs.palette.selectedAssetId],
+          prompt,
+        };
+        if (existingIndex >= 0) state.proposals[existingIndex] = proposal;
+        else state.proposals.push(proposal);
+      }
+
+      function renderPromptPacket(proposal) {
+        const capture = state.captures.find(item => item.id === proposal.captureId);
+        const palette = state.paletteAssets.find(item => item.id === proposal.paletteId);
+        const colors = palette?.colors?.length ? palette.colors : ['#F4F1EA', '#A72B2A', '#285A9B', '#D5B36B'];
+        return `<div class="prompt-packet"><strong>多模态生成包 · 3 图 + 1 文本</strong><div class="prompt-images"><div class="prompt-image" data-prompt-image="capture">${trainCompositionSvg(capture?.variantId, capture?.placement)}</div><div class="prompt-image" data-prompt-image="layout"><div class="layout-mini"><span></span><span></span><span></span></div></div><div class="prompt-image" data-prompt-image="palette"><div class="palette-mini">${colors.slice(0, 4).map(color => `<span style="background:${color}"></span>`).join('')}</div></div></div><div class="composed-prompt" data-output="composed-prompt">${proposal.prompt}</div></div>`;
+      }
+
       function renderInspector() {
         const selectedEdge = state.explorerEdges.find(edge => edge.id === state.selectedEdgeId);
         if (selectedEdge) return `<h2 class="inspector-title">已选择数据连接</h2><div class="edge-selection"><strong>${nodeDefinitions[selectedEdge.type].title} → 方案生成</strong><p>这条连线传递的是${selectedEdge.type === 'capture' ? '白模截图与纹样放置状态' : selectedEdge.type === 'layout' ? '布局参考图及布局说明' : '色板图和色彩使用说明'}。删除后，方案生成将暂时不可执行。</p><button class="danger-button" type="button" data-action="delete-edge">删除此连接</button></div>`;
@@ -553,10 +592,11 @@
             ${palette?.extracted ? `<div class="inspector-card"><strong>2. 色板筛选</strong><p>点击 × 排除不进入方案的杂色。</p><div class="swatch-row">${palette.colors.map(color => `<div class="swatch" style="background:${color}" data-color="${color}"><button class="swatch-remove" type="button" data-action="exclude-color" data-color="${color}" aria-label="排除颜色 ${color}">×</button><small>${color}</small></div>`).join('')}</div><div style="height:12px"></div></div><div class="inspector-card"><strong>3. AI 色彩使用建议</strong><p>${palette.description}</p><button class="secondary-button" style="width:100%;margin-top:8px" type="button" data-action="accept-color-guidance">采用此用色建议</button></div>` : ''}`;
         }
         const inputs = generatorInputs(selected.id);
+        const proposal = state.proposals.find(item => item.generatorId === selected.id);
         return `<h2 class="inspector-title">方案生成分支</h2>
           <div class="inspector-card"><strong>必要输入检查</strong>${['capture', 'layout', 'palette'].map(type => `<div class="input-check"><span>${nodeDefinitions[type].title}</span><b class="${inputs[type] ? '' : 'missing'}">${inputs[type] ? '已连接' : '缺失'}</b></div>`).join('')}</div>
           <div class="inspector-card"><strong>连接的含义</strong><p>箭头表示上一节点的结构化输出被当前生成分支引用。紫色传截图、橙色传布局、绿色传色板和色彩描述。</p></div>
-          <button class="primary-button" style="width:100%" type="button" data-action="generate-proposal" ${generatorReady(selected.id) ? '' : 'disabled'}>生成当前组合方案</button>`;
+          <div class="button-stack"><button class="primary-button" style="width:100%" type="button" data-action="generate-proposal" ${generatorReady(selected.id) ? '' : 'disabled'}>${proposal ? '重新生成当前方案' : '生成当前组合方案'}</button><button class="secondary-button" style="width:100%" type="button" data-action="duplicate-generator" ${generatorReady(selected.id) ? '' : 'disabled'}>复制为新探索分支</button></div>${proposal ? renderPromptPacket(proposal) : ''}`;
       }
 
       function renderCompose() {
@@ -740,6 +780,16 @@
           const node = nodeById(state.selectedNodeId);
           const palette = state.paletteAssets.find(item => item.id === node?.selectedAssetId);
           if (palette) palette.description = '以银白金属色为车身主体（约 70%），宫墙朱红用于腰线与主要色块（约 22%），青花蓝仅作车头和纹样细节的点缀色（约 8%）；不使用黑灰杂色。';
+          renderAll();
+        }
+        if (target.dataset.action === 'generate-proposal') {
+          const generator = nodeById(state.selectedNodeId);
+          if (generator?.type === 'generator' && generatorReady(generator.id)) createOrUpdateProposal(generator.id);
+          renderAll();
+        }
+        if (target.dataset.action === 'duplicate-generator') {
+          const generator = nodeById(state.selectedNodeId);
+          if (generator?.type === 'generator' && generatorReady(generator.id)) addExplorerNode('generator');
           renderAll();
         }
         if (target.dataset.action === 'reset-demo') resetDemo();

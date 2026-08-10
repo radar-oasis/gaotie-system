@@ -40,7 +40,13 @@ interface PrototypeState {
     colors?: string[];
     excludedColors?: string[];
   }>;
-  proposals: Array<{ id: string }>;
+  proposals: Array<{
+    id: string;
+    generatorId?: string;
+    layoutId?: string;
+    prompt?: string;
+    promptImages?: string[];
+  }>;
   selectedProposalIds: string[];
   selectedSceneIds: string[];
   highFidelityOutputs: Array<{ id: string }>;
@@ -288,6 +294,53 @@ describe('guided hybrid solution explorer v2 HTML prototype', () => {
     expect(palette.excludedColors).toContain('#30343B');
     expect(palette.description).toContain('银白金属色');
     expect(palette.description).toContain('青花蓝');
+  });
+
+  it('assembles exactly three multimodal prompt images and a traceable text prompt', async () => {
+    const { document, window } = await loadPrototype();
+    buildCompleteBranch(document);
+
+    click(document, '[data-node-type="generator"]');
+    click(document, '[data-action="generate-proposal"]');
+
+    const proposal = window.prototypeApi.getState().proposals[0];
+    expect(proposal.promptImages).toHaveLength(3);
+    expect(proposal.prompt).toContain('CR400BF');
+    expect(proposal.prompt).toContain('车窗带水平延展');
+    expect(proposal.prompt).toContain('银白金属色');
+    expect(document.querySelectorAll('[data-prompt-image]')).toHaveLength(3);
+    expect(document.querySelector('[data-output="composed-prompt"]')?.textContent).toContain(
+      'CR400BF',
+    );
+  });
+
+  it('duplicates a generation branch and replaces only its layout input', async () => {
+    const { document, window } = await loadPrototype();
+    buildCompleteBranch(document);
+
+    click(document, '[data-node-id="generator-1"]');
+    click(document, '[data-action="generate-proposal"]');
+    click(document, '[data-action="duplicate-generator"]');
+    click(document, '[data-add-node="layout"]');
+    click(document, '[data-node-id="layout-2"]');
+    click(document, '[data-action="choose-layout"][data-layout-id="layout-waist-accent"]');
+    click(document, '[data-node-id="generator-2"]');
+    click(document, '[data-action="generate-proposal"]');
+
+    const state = window.prototypeApi.getState();
+    expect(state.proposals).toHaveLength(2);
+    expect(state.proposals.map((proposal) => proposal.layoutId)).toEqual([
+      'layout-window-band',
+      'layout-waist-accent',
+    ]);
+    expect(
+      state.explorerEdges.filter((edge) => edge.to === 'generator-1' && edge.type === 'layout')[0]
+        ?.from,
+    ).toBe('layout-1');
+    expect(
+      state.explorerEdges.filter((edge) => edge.to === 'generator-2' && edge.type === 'layout')[0]
+        ?.from,
+    ).toBe('layout-2');
   });
 });
 
