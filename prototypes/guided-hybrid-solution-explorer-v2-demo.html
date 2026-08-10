@@ -186,6 +186,22 @@
     .input-check { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 8px; }
     .input-check b { color: #087443; }
     .input-check b.missing { color: #b54708; }
+    .edge-selection { padding: 11px; border: 1px solid #f2c9ac; border-radius: 10px; background: #fff8f2; }
+    .edge-selection strong { display: block; font-size: 10px; }
+    .edge-selection p { margin: 6px 0 10px; color: #667085; font-size: 8px; line-height: 1.55; }
+    .danger-button { width: 100%; min-height: 34px; border: 1px solid #e9a594; border-radius: 8px; background: #fff; color: #b42318; font-size: 9px; font-weight: 750; }
+    .moodboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 10px; }
+    .moodboard-image { height: 62px; overflow: hidden; border-radius: 7px; border: 1px solid var(--line); }
+    .moodboard-image:nth-child(1) { background: linear-gradient(145deg, #9d2727 0 55%, #d8b986 56% 62%, #3c2521 63%); }
+    .moodboard-image:nth-child(2) { background: radial-gradient(circle at 30% 28%, #f4f0e7 0 13%, transparent 14%), repeating-radial-gradient(circle at 70% 60%, #285a9b 0 7px, #f4f0e7 8px 13px); }
+    .moodboard-image:nth-child(3) { background: linear-gradient(165deg, #dbe2e5 0 34%, #8295a2 35% 41%, #f6f2e9 42% 58%, #253d55 59% 64%, #b9a47a 65%); }
+    .swatch-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+    .swatch { position: relative; width: 43px; height: 43px; border: 2px solid #fff; border-radius: 9px; box-shadow: 0 0 0 1px #cfd8e6; }
+    .swatch small { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); color: #667085; font-size: 6px; white-space: nowrap; }
+    .swatch-remove { position: absolute; right: -5px; top: -5px; width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: #b42318; color: #fff; font-size: 10px; line-height: 1; }
+    .layout-option { width: 100%; margin-top: 7px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #475467; text-align: left; font-size: 8px; }
+    .layout-option.is-selected { border-color: var(--layout); background: #fff8f1; color: #9a4c0b; }
+    .connection-hint { margin-left: 10px; padding: 5px 8px; border-radius: 999px; background: #fff4e8; color: #9a4c0b; font-size: 8px; font-weight: 700; }
     .placeholder-view { height: 100%; display: grid; place-items: center; color: var(--muted); }
 
     @media (max-width: 1100px) {
@@ -409,6 +425,11 @@
         palette: { title: '色彩方案', icon: '色', note: '独立色板与 AI 色彩使用建议', color: 'palette' },
         generator: { title: '方案生成', icon: 'AI', note: '汇合三类多模态输入，生成一条可追踪分支', color: 'generator' },
       };
+      const layoutCatalog = [
+        { id: 'layout-window-band', title: '车窗带水平延展', description: '纹样沿车窗带下缘连续延展，视觉稳定、速度指向明确。', ai: true },
+        { id: 'layout-waist-accent', title: '腰线局部点缀', description: '仅在腰线和车头过渡区出现，最大程度保留银白留白。' },
+        { id: 'layout-skirt-rhythm', title: '裙板渐进节奏', description: '纹样集中在下车体，以疏密变化形成运动节奏。' },
+      ];
 
       function nodeById(id) {
         return state.explorerNodes.find(node => node.id === id);
@@ -453,13 +474,12 @@
         };
         if (type === 'capture') node.selectedAssetId = state.captures[0]?.id || null;
         if (type === 'layout') {
-          const layoutId = `layout-${state.layoutAssets.length + 1}`;
-          state.layoutAssets.push({ id: layoutId, title: '车窗带水平延展', description: '纹样集中于车窗带下缘与腰线，保留车门、车窗和大面积银白底色。' });
-          node.selectedAssetId = layoutId;
+          if (!state.layoutAssets.length) state.layoutAssets = layoutCatalog.map(item => ({ ...item }));
+          node.selectedAssetId = 'layout-window-band';
         }
         if (type === 'palette') {
           const paletteId = `palette-${state.paletteAssets.length + 1}`;
-          state.paletteAssets.push({ id: paletteId, title: '宫墙朱红与青花蓝', colors: ['#F4F1EA', '#A72B2A', '#285A9B', '#D5B36B'], description: '以银白金属色为主体，宫墙朱红用于腰线，青花蓝作为小面积点缀。' });
+          state.paletteAssets.push({ id: paletteId, title: '待建立的文化主题色板', colors: [], excludedColors: [], searched: false, extracted: false, description: '请检索文化情绪板并提取色板，或上传自己的参考图。' });
           node.selectedAssetId = paletteId;
         }
         state.explorerNodes.push(node);
@@ -520,10 +540,18 @@
       }
 
       function renderInspector() {
+        const selectedEdge = state.explorerEdges.find(edge => edge.id === state.selectedEdgeId);
+        if (selectedEdge) return `<h2 class="inspector-title">已选择数据连接</h2><div class="edge-selection"><strong>${nodeDefinitions[selectedEdge.type].title} → 方案生成</strong><p>这条连线传递的是${selectedEdge.type === 'capture' ? '白模截图与纹样放置状态' : selectedEdge.type === 'layout' ? '布局参考图及布局说明' : '色板图和色彩使用说明'}。删除后，方案生成将暂时不可执行。</p><button class="danger-button" type="button" data-action="delete-edge">删除此连接</button></div>`;
         const selected = nodeById(state.selectedNodeId) || latestGenerator();
         if (!selected) return '<div class="summary-card"><p>从左侧添加功能节点。系统会把新输入自动连接到当前方案生成节点，仍可手动删除或重连。</p></div>';
         const definition = nodeDefinitions[selected.type];
-        if (selected.type !== 'generator') return `<h2 class="inspector-title">${definition.title}</h2><div class="inspector-card"><strong>节点职责</strong><p>${definition.note}</p></div><div class="inspector-card"><strong>当前资产</strong><p>${nodeSummary(selected)}</p></div>`;
+        if (selected.type === 'capture') return `<h2 class="inspector-title">${definition.title}</h2><div class="inspector-card"><strong>节点职责</strong><p>${definition.note}</p></div><div class="inspector-card"><strong>当前资产</strong><p>${nodeSummary(selected)}</p></div>`;
+        if (selected.type === 'layout') return `<h2 class="inspector-title">布局方案</h2><div class="inspector-card"><strong>AI 推荐</strong><p>基于“修长车身、较多留白、水平速度感”，优先推荐车窗带水平延展。布局只定义空间组织，不绑定具体颜色。</p></div><div class="inspector-card"><strong>选择布局</strong>${layoutCatalog.map(layout => `<button class="layout-option ${selected.selectedAssetId === layout.id ? 'is-selected' : ''}" type="button" data-action="choose-layout" data-layout-id="${layout.id}">${layout.ai ? 'AI 推荐 · ' : ''}${layout.title}<br><small>${layout.description}</small></button>`).join('')}</div>`;
+        if (selected.type === 'palette') {
+          const palette = state.paletteAssets.find(item => item.id === selected.selectedAssetId);
+          return `<h2 class="inspector-title">独立色彩节点</h2><div class="inspector-card"><strong>1. 文化主题情绪板</strong><p>以“中国传统文化、宫墙、青花、速度感”为关键词检索；也可用“上传参考图”替代。</p><button class="secondary-button" style="width:100%;margin-top:8px" type="button" data-action="search-moodboard">${palette?.searched ? '重新检索图片' : 'AI 检索文化图片'}</button>${palette?.searched ? `<div class="moodboard-grid"><div class="moodboard-image" data-moodboard-image="宫墙"></div><div class="moodboard-image" data-moodboard-image="青花"></div><div class="moodboard-image" data-moodboard-image="金属列车"></div></div><button class="secondary-button" style="width:100%" type="button" data-action="extract-palette">从情绪板提取色板</button>` : ''}</div>
+            ${palette?.extracted ? `<div class="inspector-card"><strong>2. 色板筛选</strong><p>点击 × 排除不进入方案的杂色。</p><div class="swatch-row">${palette.colors.map(color => `<div class="swatch" style="background:${color}" data-color="${color}"><button class="swatch-remove" type="button" data-action="exclude-color" data-color="${color}" aria-label="排除颜色 ${color}">×</button><small>${color}</small></div>`).join('')}</div><div style="height:12px"></div></div><div class="inspector-card"><strong>3. AI 色彩使用建议</strong><p>${palette.description}</p><button class="secondary-button" style="width:100%;margin-top:8px" type="button" data-action="accept-color-guidance">采用此用色建议</button></div>` : ''}`;
+        }
         const inputs = generatorInputs(selected.id);
         return `<h2 class="inspector-title">方案生成分支</h2>
           <div class="inspector-card"><strong>必要输入检查</strong>${['capture', 'layout', 'palette'].map(type => `<div class="input-check"><span>${nodeDefinitions[type].title}</span><b class="${inputs[type] ? '' : 'missing'}">${inputs[type] ? '已连接' : '缺失'}</b></div>`).join('')}</div>
@@ -537,7 +565,7 @@
             <div class="library-note">点击添加后系统自动连到当前生成节点；连线只是数据引用，不会改变源资产。节点可继续复制、重连并形成并行分支。</div>
             ${Object.entries(nodeDefinitions).map(([type, item]) => `<button class="node-tool" type="button" data-add-node="${type}"><span class="node-tool-icon">${item.icon}</span><span><strong>${item.title}</strong><span>${item.note}</span></span><b>＋</b></button>`).join('')}
           </div><footer class="side-footer"><div class="summary-card"><p>当前：${state.explorerNodes.length} 个节点 · ${state.explorerEdges.length} 条数据连接</p></div></footer></aside>
-          <div class="node-workbench"><div class="node-toolbar"><p><strong>方案组合画布</strong> · 搭积木式探索 capture + layout + palette → proposal</p><span style="margin-left:auto"></span><button class="tool-button" type="button">适配视图</button><button class="tool-button" type="button">整理节点</button></div><div class="node-canvas" data-region="node-canvas"><svg class="edge-layer" aria-label="节点数据连接">${renderEdges()}</svg>${state.explorerNodes.map(renderExplorerNode).join('')} ${state.explorerNodes.length ? '' : '<div class="summary-card" style="position:absolute;left:50%;top:42%;width:310px;transform:translate(-50%,-50%);text-align:center"><strong>从“方案生成”节点开始</strong><p>然后添加截图、布局和色彩节点，系统会自动建立三种类型明确的连接。</p></div>'}</div></div>
+          <div class="node-workbench"><div class="node-toolbar"><p><strong>方案组合画布</strong> · 搭积木式探索 capture + layout + palette → proposal</p>${state.pendingConnection ? `<span class="connection-hint">正在连接 ${nodeDefinitions[state.pendingConnection.type].title}，请选择同类型输入端口</span>` : ''}<span style="margin-left:auto"></span><button class="tool-button" type="button">适配视图</button><button class="tool-button" type="button">整理节点</button></div><div class="node-canvas" data-region="node-canvas"><svg class="edge-layer" aria-label="节点数据连接">${renderEdges()}</svg>${state.explorerNodes.map(renderExplorerNode).join('')} ${state.explorerNodes.length ? '' : '<div class="summary-card" style="position:absolute;left:50%;top:42%;width:310px;transform:translate(-50%,-50%);text-align:center"><strong>从“方案生成”节点开始</strong><p>然后添加截图、布局和色彩节点，系统会自动建立三种类型明确的连接。</p></div>'}</div></div>
           <aside class="node-side right"><header class="module-header"><div><h1>节点检查器</h1><p>配置资产、查看输入与生成</p></div></header><div class="inspector-scroll">${renderInspector()}</div><footer class="side-footer"><button class="secondary-button" type="button" style="width:100%">保存当前探索路径</button></footer></aside>
         </section>`;
       }
@@ -568,11 +596,36 @@
       document.addEventListener('click', (event) => {
         const target = event.target.closest('button');
         if (!target) {
+          const edge = event.target.closest('[data-edge-id]');
+          if (edge) {
+            state.selectedEdgeId = edge.dataset.edgeId;
+            state.selectedNodeId = null;
+            renderWorkspace();
+            return;
+          }
           const node = event.target.closest('[data-node-id]');
           if (node) {
             state.selectedNodeId = node.dataset.nodeId;
             state.selectedEdgeId = null;
             renderWorkspace();
+          }
+          return;
+        }
+        if (target.dataset.portOutput) {
+          state.pendingConnection = { nodeId: target.dataset.nodePortId, type: target.dataset.portOutput };
+          state.selectedEdgeId = null;
+          renderWorkspace();
+          return;
+        }
+        if (target.dataset.portInput) {
+          if (state.pendingConnection && state.pendingConnection.type === target.dataset.portInput) {
+            const source = nodeById(state.pendingConnection.nodeId);
+            const generator = nodeById(target.dataset.nodePortId);
+            if (source && generator?.type === 'generator') connectSourceToGenerator(source, generator);
+            state.pendingConnection = null;
+            state.selectedNodeId = generator?.id || null;
+            state.selectedEdgeId = null;
+            renderAll();
           }
           return;
         }
@@ -643,6 +696,50 @@
         }
         if (target.dataset.addNode) {
           addExplorerNode(target.dataset.addNode);
+          renderAll();
+        }
+        if (target.dataset.action === 'delete-edge' && state.selectedEdgeId) {
+          state.explorerEdges = state.explorerEdges.filter(edge => edge.id !== state.selectedEdgeId);
+          const generator = latestGenerator();
+          state.selectedEdgeId = null;
+          state.selectedNodeId = generator?.id || null;
+          renderAll();
+        }
+        if (target.dataset.action === 'choose-layout') {
+          const node = nodeById(state.selectedNodeId);
+          if (node?.type === 'layout') node.selectedAssetId = target.dataset.layoutId;
+          renderAll();
+        }
+        if (target.dataset.action === 'search-moodboard') {
+          const node = nodeById(state.selectedNodeId);
+          const palette = state.paletteAssets.find(item => item.id === node?.selectedAssetId);
+          if (palette) palette.searched = true;
+          renderWorkspace();
+        }
+        if (target.dataset.action === 'extract-palette') {
+          const node = nodeById(state.selectedNodeId);
+          const palette = state.paletteAssets.find(item => item.id === node?.selectedAssetId);
+          if (palette) {
+            palette.extracted = true;
+            palette.title = '宫墙朱红与青花蓝';
+            palette.colors = ['#F4F1EA', '#A72B2A', '#285A9B', '#D5B36B', '#30343B'];
+            palette.description = '建议从提取颜色中筛除杂色，再生成面向车身区域的用色说明。';
+          }
+          renderAll();
+        }
+        if (target.dataset.action === 'exclude-color') {
+          const node = nodeById(state.selectedNodeId);
+          const palette = state.paletteAssets.find(item => item.id === node?.selectedAssetId);
+          if (palette) {
+            palette.colors = palette.colors.filter(color => color !== target.dataset.color);
+            palette.excludedColors = [...new Set([...(palette.excludedColors || []), target.dataset.color])];
+          }
+          renderWorkspace();
+        }
+        if (target.dataset.action === 'accept-color-guidance') {
+          const node = nodeById(state.selectedNodeId);
+          const palette = state.paletteAssets.find(item => item.id === node?.selectedAssetId);
+          if (palette) palette.description = '以银白金属色为车身主体（约 70%），宫墙朱红用于腰线与主要色块（约 22%），青花蓝仅作车头和纹样细节的点缀色（约 8%）；不使用黑灰杂色。';
           renderAll();
         }
         if (target.dataset.action === 'reset-demo') resetDemo();

@@ -34,7 +34,12 @@ interface PrototypeState {
   explorerEdges: ExplorerEdge[];
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
-  paletteAssets: Array<{ id: string; description: string }>;
+  paletteAssets: Array<{
+    id: string;
+    description: string;
+    colors?: string[];
+    excludedColors?: string[];
+  }>;
   proposals: Array<{ id: string }>;
   selectedProposalIds: string[];
   selectedSceneIds: string[];
@@ -68,9 +73,15 @@ async function loadPrototype() {
 }
 
 function click(document: Document, selector: string): void {
-  const element = document.querySelector<HTMLElement>(selector);
+  const element = document.querySelector<Element>(selector);
   if (!element) throw new Error(`Missing clickable element: ${selector}`);
-  element.click();
+  if ('click' in element && typeof element.click === 'function') {
+    element.click();
+    return;
+  }
+  const MouseEventConstructor = element.ownerDocument.defaultView?.MouseEvent;
+  if (!MouseEventConstructor) throw new Error('Missing MouseEvent constructor');
+  element.dispatchEvent(new MouseEventConstructor('click', { bubbles: true }));
 }
 
 function input(document: Document, selector: string, value: string): void {
@@ -97,6 +108,14 @@ function advanceToCompose(document: Document): void {
   click(document, '[data-action="generate-variants"]');
   click(document, '[data-action="capture-state"]');
   click(document, '[data-action="confirm-captures"]');
+}
+
+function buildCompleteBranch(document: Document): void {
+  advanceToCompose(document);
+  click(document, '[data-add-node="generator"]');
+  click(document, '[data-add-node="capture"]');
+  click(document, '[data-add-node="layout"]');
+  click(document, '[data-add-node="palette"]');
 }
 
 describe('guided hybrid solution explorer v2 HTML prototype', () => {
@@ -222,6 +241,53 @@ describe('guided hybrid solution explorer v2 HTML prototype', () => {
     expect(
       document.querySelector('[data-action="generate-proposal"]')?.hasAttribute('disabled'),
     ).toBe(false);
+  });
+
+  it('deletes and manually reconnects a typed layout edge through visible ports', async () => {
+    const { document, window } = await loadPrototype();
+    buildCompleteBranch(document);
+
+    click(document, '[data-edge-type="layout"]');
+    expect(window.prototypeApi.getState().selectedEdgeId).not.toBeNull();
+    click(document, '[data-action="delete-edge"]');
+
+    expect(window.prototypeApi.getState().explorerEdges.map((edge) => edge.type)).not.toContain(
+      'layout',
+    );
+    expect(
+      document.querySelector('[data-action="generate-proposal"]')?.hasAttribute('disabled'),
+    ).toBe(true);
+
+    click(document, '[data-port-output="layout"]');
+    click(document, '[data-port-input="layout"]');
+
+    expect(window.prototypeApi.getState().explorerEdges.map((edge) => edge.type)).toContain(
+      'layout',
+    );
+    expect(
+      document.querySelector('[data-action="generate-proposal"]')?.hasAttribute('disabled'),
+    ).toBe(false);
+  });
+
+  it('turns a cultural moodboard into an editable palette and AI color-use description', async () => {
+    const { document, window } = await loadPrototype();
+    buildCompleteBranch(document);
+
+    click(document, '[data-node-type="palette"]');
+    click(document, '[data-action="search-moodboard"]');
+    click(document, '[data-action="extract-palette"]');
+
+    expect(document.querySelectorAll('[data-moodboard-image]')).toHaveLength(3);
+    expect(document.querySelector('[data-color="#30343B"]')).not.toBeNull();
+
+    click(document, '[data-action="exclude-color"][data-color="#30343B"]');
+    click(document, '[data-action="accept-color-guidance"]');
+
+    const palette = window.prototypeApi.getState().paletteAssets[0];
+    expect(palette.colors).not.toContain('#30343B');
+    expect(palette.excludedColors).toContain('#30343B');
+    expect(palette.description).toContain('银白金属色');
+    expect(palette.description).toContain('青花蓝');
   });
 });
 
