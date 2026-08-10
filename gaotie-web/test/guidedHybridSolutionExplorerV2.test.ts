@@ -80,6 +80,10 @@ function input(document: Document, selector: string, value: string): void {
   element.dispatchEvent(new EventConstructor('input', { bubbles: true }));
 }
 
+function advanceToRecommendation(document: Document): void {
+  click(document, '[data-action="confirm-demand"]');
+}
+
 describe('guided hybrid solution explorer v2 HTML prototype', () => {
   it('renders a six-stage standalone workflow at demand analysis', async () => {
     const { document, window } = await loadPrototype();
@@ -101,6 +105,38 @@ describe('guided hybrid solution explorer v2 HTML prototype', () => {
       demandConfirmed: true,
     });
     expect(window.prototypeApi.getState().intentions).toContain('青花');
+  });
+
+  it('records style feedback and refreshes a preference-aware second round', async () => {
+    const { document, window } = await loadPrototype();
+    advanceToRecommendation(document);
+
+    click(document, '[data-pattern-id="minimal-dragon"] [data-action="more-like"]');
+    click(
+      document,
+      '[data-pattern-id="traditional-round-dragon"] [data-action="less-like"]',
+    );
+    click(document, '[data-action="refresh-recommendations"]');
+
+    expect(window.prototypeApi.getState()).toMatchObject({ recommendationRound: 2 });
+    expect(window.prototypeApi.getState().preferredStyles).toContain('极简流线');
+    expect(window.prototypeApi.getState().reducedStyles).toContain('传统线描');
+    expect(document.querySelector('[data-output="recommendation-reason"]')?.textContent).toContain(
+      '水平延展',
+    );
+  });
+
+  it('requires at least one selected pattern before transformation', async () => {
+    const { document } = await loadPrototype();
+    advanceToRecommendation(document);
+
+    expect(
+      document.querySelector('[data-action="confirm-patterns"]')?.hasAttribute('disabled'),
+    ).toBe(true);
+    click(document, '[data-pattern-id="minimal-dragon"] [data-action="select-pattern"]');
+    expect(
+      document.querySelector('[data-action="confirm-patterns"]')?.hasAttribute('disabled'),
+    ).toBe(false);
   });
 });
 

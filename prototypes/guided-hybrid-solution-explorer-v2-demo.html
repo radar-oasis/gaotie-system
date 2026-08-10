@@ -77,6 +77,34 @@
     .intent-chip.is-selected { border-color: #e99b78; background: #fff4ed; color: #b54708; }
     .intent-footer { padding: 16px 20px; border-top: 1px solid var(--line); background: #fff; }
     .intent-footer .primary-button { width: 100%; }
+    .recommend-view { display: grid; grid-template-columns: 280px minmax(0, 1fr) 300px; height: 100%; background: #fff; }
+    .recommend-side { display: grid; grid-template-rows: 68px minmax(0, 1fr) auto; min-width: 0; border-right: 1px solid var(--line); background: #fbfcfe; }
+    .recommend-side.right { border-right: 0; border-left: 1px solid var(--line); }
+    .recommend-side-content { overflow: auto; padding: 17px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .filter-tag { padding: 5px 8px; border-radius: 999px; background: #eef3f9; color: #475467; font-size: 8px; }
+    .recommend-main { display: grid; grid-template-rows: 68px minmax(0, 1fr); min-width: 0; }
+    .recommend-grid { display: grid; grid-template-columns: repeat(3, minmax(170px, 1fr)); gap: 13px; overflow: auto; padding: 18px; align-content: start; background: #fff; }
+    .pattern-card { overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; transition: border-color .16s ease, box-shadow .16s ease; }
+    .pattern-card.is-selected { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .pattern-image { height: 126px; display: grid; place-items: center; background: #f5f5f2; }
+    .pattern-image svg { width: 100%; height: 100%; }
+    .pattern-copy { padding: 11px; }
+    .pattern-copy strong { display: block; font-size: 11px; }
+    .pattern-copy p { min-height: 31px; margin: 5px 0 8px; color: var(--muted); font-size: 8px; line-height: 1.55; }
+    .style-label { display: inline-flex; padding: 3px 6px; border-radius: 999px; background: #f2f4f7; color: #667085; font-size: 7px; }
+    .pattern-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 9px; }
+    .pattern-actions button { min-height: 27px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: #475467; font-size: 8px; }
+    .pattern-actions .select-pattern { grid-column: 1 / -1; border-color: #bfd4fc; color: #1d4ed8; }
+    .pattern-actions button.is-active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+    .selected-pattern-row { display: grid; grid-template-columns: 64px 1fr; gap: 9px; align-items: center; margin-bottom: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+    .selected-pattern-row svg { width: 64px; height: 46px; border-radius: 6px; background: #f4f5f2; }
+    .selected-pattern-row strong { font-size: 9px; }
+    .preference-box { margin-top: 12px; padding: 11px; border: 1px solid #cfe0fb; border-radius: 10px; background: #f5f8ff; }
+    .preference-box strong { display: block; margin-bottom: 5px; color: #1d4ed8; font-size: 10px; }
+    .preference-box p { margin: 0; color: #475467; font-size: 8px; line-height: 1.55; }
+    .side-footer { padding: 14px 17px; border-top: 1px solid var(--line); background: #fff; }
+    .side-footer .primary-button, .side-footer .secondary-button { width: 100%; }
     .placeholder-view { height: 100%; display: grid; place-items: center; color: var(--muted); }
 
     @media (max-width: 1100px) {
@@ -189,11 +217,68 @@
         </section>`;
       }
 
+      function motifSvg(kind) {
+        const base = kind.includes('cloud')
+          ? `<path d="M18 66c13-25 42-22 50-4 7-31 53-38 65-7 27-17 63 3 54 31H42c-19 0-30-8-24-20Z" fill="none" stroke="#27364a" stroke-width="7" stroke-linecap="round"/><path d="M58 88h91c17 0 25 9 16 20H82" fill="none" stroke="#b8322a" stroke-width="5" stroke-linecap="round"/>`
+          : kind.includes('geometric')
+            ? `<path d="M18 94 51 44l28 28 30-47 31 52 26-31 38 48-44-13-27 25-30-26-34 31-28-25Z" fill="none" stroke="#27364a" stroke-width="7" stroke-linejoin="round"/><circle cx="54" cy="43" r="8" fill="#b8322a"/>`
+            : kind.includes('blue')
+              ? `<path d="M12 80c30-55 71-60 104-18 23 29 51 37 96 2" fill="none" stroke="#285a9b" stroke-width="10" stroke-linecap="round"/><path d="M50 64c-4-27 17-41 43-33L82 46l22-2-15 17 22 10-27 5" fill="#285a9b"/>`
+              : kind.includes('minimal')
+                ? `<path d="M12 85c33-52 75-52 107-17 23 25 49 29 92-5" fill="none" stroke="#b8322a" stroke-width="9" stroke-linecap="round"/><path d="M45 67c-8-28 13-45 42-37l-11 16 25-4-17 19 25 10-29 7" fill="#b8322a"/>`
+                : `<path d="M42 105c-20-23-17-59 10-77 23-16 57-9 64 17 7 24-13 37-30 24-13-11 1-31 22-25 37 11 27 64 58 71 20 5 34-13 27-31" fill="none" stroke="#27364a" stroke-width="8" stroke-linecap="round"/><path d="M45 41 17 25l14 28-28 5 34 9M71 27 68 3l18 18L99 2l2 31" fill="none" stroke="#27364a" stroke-width="6"/><circle cx="61" cy="43" r="5" fill="#b8322a"/>`;
+        return `<svg viewBox="0 0 220 130" role="img" aria-label="纹样预览">${base}</svg>`;
+      }
+
+      const patternCatalog = [
+        { id: 'traditional-round-dragon', title: '传统团龙纹', style: '传统线描', note: '文化身份强，细节密度较高' },
+        { id: 'traditional-cloud', title: '祥云边饰', style: '传统线描', note: '适合腰线和局部边界点缀' },
+        { id: 'geometric-scale', title: '几何龙鳞', style: '几何抽象', note: '模块化秩序，适合重复构成' },
+        { id: 'minimal-dragon', title: '单线流线龙形', style: '极简流线', note: '水平延展明显，适合修长车身' },
+        { id: 'minimal-cloud', title: '水平云气纹', style: '极简流线', note: '低密度连续节奏，留白充分' },
+        { id: 'blue-fusion', title: '青花龙纹', style: '现代融合', note: '青花蓝与传统龙形的现代转译' },
+      ];
+
+      function renderRecommendation() {
+        const roundReason = state.recommendationRound === 1
+          ? '首轮同时覆盖传统、几何、极简和现代融合方向，避免过早收敛。'
+          : '根据反馈提高极简流线权重：增加水平延展、降低具象细节，并继续保持龙首可辨。';
+        const orderedPatterns = state.recommendationRound === 1
+          ? patternCatalog
+          : [...patternCatalog].sort((a, b) => Number(b.style === '极简流线') - Number(a.style === '极简流线'));
+        return `<section class="recommend-view" data-view="recommend">
+          <aside class="recommend-side">
+            <header class="module-header"><div><h1>纹样检索条件</h1><p>需求对话自动转为检索上下文</p></div></header>
+            <div class="recommend-side-content">
+              <div class="summary-card"><strong>检索解析</strong><p>围绕中国传统文化、龙纹与祥云，优先寻找可横向延展、低密度、适合高铁侧车身的视觉母题。</p><div class="filter-row">${state.intentions.map(item => `<span class="filter-tag">${item}</span>`).join('')}</div></div>
+              <div class="preference-box"><strong>第 ${state.recommendationRound} 轮推荐依据</strong><p data-output="recommendation-reason">${roundReason}</p></div>
+              <h2 class="section-title">你的偏好反馈</h2>
+              <div class="summary-card"><p>增加：${state.preferredStyles.join('、') || '尚未反馈'}<br>减少：${state.reducedStyles.join('、') || '尚未反馈'}</p></div>
+            </div>
+            <footer class="side-footer"><button class="secondary-button" type="button" data-action="refresh-recommendations">基于偏好再次推荐</button></footer>
+          </aside>
+          <div class="recommend-main">
+            <header class="module-header"><div><h1>多风格纹样推荐</h1><p>不是一次性给出单一答案，而是通过反馈逐轮收敛</p></div><span class="module-badge">第 ${state.recommendationRound} 轮</span></header>
+            <div class="recommend-grid">${orderedPatterns.map(pattern => `<article class="pattern-card ${state.selectedPatternIds.includes(pattern.id) ? 'is-selected' : ''}" data-pattern-id="${pattern.id}">
+              <div class="pattern-image">${motifSvg(pattern.id)}</div><div class="pattern-copy"><strong>${pattern.title}</strong><p>${pattern.note}</p><span class="style-label">${pattern.style}</span>
+              <div class="pattern-actions"><button class="${state.preferredStyles.includes(pattern.style) ? 'is-active' : ''}" type="button" data-action="more-like" data-style="${pattern.style}">更多此类</button><button class="${state.reducedStyles.includes(pattern.style) ? 'is-active' : ''}" type="button" data-action="less-like" data-style="${pattern.style}">减少此类</button><button class="select-pattern ${state.selectedPatternIds.includes(pattern.id) ? 'is-active' : ''}" type="button" data-action="select-pattern" data-pattern-choice="${pattern.id}">${state.selectedPatternIds.includes(pattern.id) ? '已选取' : '选取纹样'}</button></div></div>
+            </article>`).join('')}</div>
+          </div>
+          <aside class="recommend-side right">
+            <header class="module-header"><div><h1>已选纹样</h1><p>${state.selectedPatternIds.length} 个视觉母题</p></div></header>
+            <div class="recommend-side-content">${state.selectedPatternIds.length ? state.selectedPatternIds.map(id => { const pattern = patternCatalog.find(item => item.id === id); return `<div class="selected-pattern-row">${motifSvg(id)}<div><strong>${pattern?.title || id}</strong><div class="style-label">${pattern?.style || ''}</div></div></div>`; }).join('') : '<div class="summary-card"><p>从中间选取至少一张纹样。确认后可在转化画布中继续生成不同风格变体。</p></div>'}</div>
+            <footer class="side-footer"><button class="primary-button" type="button" data-action="confirm-patterns" ${state.selectedPatternIds.length ? '' : 'disabled'}>确认纹样，进入转化画布</button></footer>
+          </aside>
+        </section>`;
+      }
+
       function renderWorkspace() {
         const region = document.querySelector('[data-region="main-workspace"]');
         region.innerHTML = state.activeStage === 'demand'
           ? renderDemand()
-          : `<section class="placeholder-view" data-view="${state.activeStage}"><p>${stages.find(stage => stage.id === state.activeStage)?.label}</p></section>`;
+          : state.activeStage === 'recommend'
+            ? renderRecommendation()
+            : `<section class="placeholder-view" data-view="${state.activeStage}"><p>${stages.find(stage => stage.id === state.activeStage)?.label}</p></section>`;
       }
 
       function renderAll() {
@@ -223,6 +308,33 @@
         if (target.dataset.action === 'confirm-demand') {
           state.demandConfirmed = true;
           state.activeStage = 'recommend';
+          renderAll();
+        }
+        if (target.dataset.action === 'more-like') {
+          const style = target.dataset.style;
+          if (!state.preferredStyles.includes(style)) state.preferredStyles.push(style);
+          state.reducedStyles = state.reducedStyles.filter(item => item !== style);
+          renderWorkspace();
+        }
+        if (target.dataset.action === 'less-like') {
+          const style = target.dataset.style;
+          if (!state.reducedStyles.includes(style)) state.reducedStyles.push(style);
+          state.preferredStyles = state.preferredStyles.filter(item => item !== style);
+          renderWorkspace();
+        }
+        if (target.dataset.action === 'refresh-recommendations') {
+          state.recommendationRound = 2;
+          renderWorkspace();
+        }
+        if (target.dataset.action === 'select-pattern') {
+          const patternId = target.dataset.patternChoice;
+          state.selectedPatternIds = state.selectedPatternIds.includes(patternId)
+            ? state.selectedPatternIds.filter(id => id !== patternId)
+            : [...state.selectedPatternIds, patternId];
+          renderAll();
+        }
+        if (target.dataset.action === 'confirm-patterns' && state.selectedPatternIds.length) {
+          state.activeStage = 'transform';
           renderAll();
         }
         if (target.dataset.action === 'reset-demo') resetDemo();
