@@ -124,6 +124,24 @@ function buildCompleteBranch(document: Document): void {
   click(document, '[data-add-node="palette"]');
 }
 
+function createThreeProposals(document: Document): void {
+  buildCompleteBranch(document);
+  click(document, '[data-node-id="generator-1"]');
+  click(document, '[data-action="generate-proposal"]');
+
+  click(document, '[data-action="duplicate-generator"]');
+  click(document, '[data-add-node="layout"]');
+  click(document, '[data-node-id="layout-2"]');
+  click(document, '[data-action="choose-layout"][data-layout-id="layout-waist-accent"]');
+  click(document, '[data-node-id="generator-2"]');
+  click(document, '[data-action="generate-proposal"]');
+
+  click(document, '[data-action="duplicate-generator"]');
+  click(document, '[data-add-node="palette"]');
+  click(document, '[data-node-id="generator-3"]');
+  click(document, '[data-action="generate-proposal"]');
+}
+
 describe('guided hybrid solution explorer v2 HTML prototype', () => {
   it('renders a six-stage standalone workflow at demand analysis', async () => {
     const { document, window } = await loadPrototype();
@@ -341,6 +359,45 @@ describe('guided hybrid solution explorer v2 HTML prototype', () => {
       state.explorerEdges.filter((edge) => edge.to === 'generator-2' && edge.type === 'layout')[0]
         ?.from,
     ).toBe('layout-2');
+  });
+
+  it('compares three candidate proposals while leaving the final choice to the user', async () => {
+    const { document, window } = await loadPrototype();
+    createThreeProposals(document);
+
+    click(document, '[data-stage-id="select"]');
+
+    expect(document.querySelectorAll('[data-proposal-id]')).toHaveLength(3);
+    expect(document.querySelector('[data-ai-recommendation]')?.textContent).toContain('建议保留');
+
+    click(document, '[data-proposal-id="proposal-1"] [data-action="toggle-proposal"]');
+    click(document, '[data-proposal-id="proposal-2"] [data-action="toggle-proposal"]');
+    click(document, '[data-action="confirm-proposals"]');
+
+    expect(window.prototypeApi.getState()).toMatchObject({
+      activeStage: 'fidelity',
+      selectedProposalIds: ['proposal-1', 'proposal-2'],
+    });
+  });
+
+  it('crosses selected proposals with selected scenes to create high-fidelity outputs', async () => {
+    const { document, window } = await loadPrototype();
+    createThreeProposals(document);
+    click(document, '[data-stage-id="select"]');
+    click(document, '[data-proposal-id="proposal-1"] [data-action="toggle-proposal"]');
+    click(document, '[data-proposal-id="proposal-2"] [data-action="toggle-proposal"]');
+    click(document, '[data-action="confirm-proposals"]');
+
+    click(document, '[data-scene-id="platform"]');
+    click(document, '[data-scene-id="motion"]');
+    click(document, '[data-action="generate-fidelity"]');
+
+    expect(window.prototypeApi.getState().selectedSceneIds).toEqual(['platform', 'motion']);
+    expect(window.prototypeApi.getState().highFidelityOutputs).toHaveLength(4);
+    expect(document.querySelectorAll('[data-fidelity-output]')).toHaveLength(4);
+
+    click(document, '[data-action="open-archive"]');
+    expect(document.querySelector('[data-region="process-archive"]')).not.toBeNull();
   });
 });
 

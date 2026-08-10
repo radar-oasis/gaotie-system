@@ -212,6 +212,63 @@
     .palette-mini { display: grid; grid-template-columns: repeat(2, 1fr); height: 100%; }
     .composed-prompt { max-height: 118px; overflow: auto; margin-top: 8px; padding: 8px; border-radius: 8px; background: #f7f8fa; color: #475467; font-size: 7px; line-height: 1.55; white-space: pre-wrap; }
     .button-stack { display: grid; gap: 7px; margin-top: 10px; }
+    .select-view { display: grid; grid-template-rows: 74px minmax(0, 1fr) auto; height: 100%; background: #f6f8fb; }
+    .select-header, .fidelity-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 22px; border-bottom: 1px solid var(--line); background: #fff; }
+    .select-header h1, .fidelity-header h1 { margin: 0; font-size: 17px; }
+    .select-header p, .fidelity-header p { margin: 4px 0 0; color: var(--muted); font-size: 9px; }
+    .selection-count { padding: 7px 10px; border-radius: 999px; background: var(--primary-soft); color: var(--primary); font-size: 9px; font-weight: 750; }
+    .select-content { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: 0; }
+    .proposal-grid { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; overflow: auto; padding: 18px; align-content: start; }
+    .proposal-card { overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: 0 5px 18px rgba(30,41,59,.06); }
+    .proposal-card.is-selected { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    .proposal-preview { height: 155px; background: #eef2f6; }
+    .proposal-preview svg { display: block; width: 100%; height: 100%; }
+    .proposal-info { padding: 12px; }
+    .proposal-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .proposal-title-row strong { font-size: 11px; }
+    .recommended-tag { padding: 3px 6px; border-radius: 999px; background: #e8f7ef; color: #087443; font-size: 7px; font-weight: 750; }
+    .proposal-route { margin: 7px 0; color: #667085; font-size: 8px; line-height: 1.5; }
+    .score-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 9px 0; }
+    .score-cell { padding: 6px; border-radius: 7px; background: #f7f8fa; text-align: center; }
+    .score-cell b { display: block; color: #344054; font-size: 10px; }
+    .score-cell span { color: #98a2b3; font-size: 6px; }
+    .select-button { width: 100%; min-height: 32px; border: 1px solid #bfd4fc; border-radius: 8px; background: #fff; color: var(--primary); font-size: 9px; font-weight: 750; }
+    .proposal-card.is-selected .select-button { background: var(--primary); color: #fff; }
+    .ai-evaluation { overflow: auto; padding: 18px; border-left: 1px solid var(--line); background: #fff; }
+    .ai-evaluation h2 { margin: 0 0 12px; font-size: 13px; }
+    .evaluation-card { margin-bottom: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fafbfc; }
+    .evaluation-card strong { display: block; margin-bottom: 6px; color: #344054; font-size: 9px; }
+    .evaluation-card p { margin: 0; color: #667085; font-size: 8px; line-height: 1.65; }
+    .select-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 22px; border-top: 1px solid var(--line); background: #fff; }
+    .fidelity-view { display: grid; grid-template-rows: 74px minmax(0, 1fr); height: 100%; background: #f6f8fb; }
+    .fidelity-content { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 0; }
+    .scene-panel { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; border-right: 1px solid var(--line); background: #fff; }
+    .scene-scroll { overflow: auto; padding: 16px; }
+    .scene-scroll h2 { margin: 0 0 5px; font-size: 12px; }
+    .scene-scroll > p { margin: 0 0 13px; color: var(--muted); font-size: 8px; line-height: 1.5; }
+    .scene-option { width: 100%; display: grid; grid-template-columns: 50px 1fr; gap: 9px; align-items: center; margin-bottom: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: #475467; text-align: left; }
+    .scene-option.is-selected { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+    .scene-thumb { height: 40px; border-radius: 7px; background: linear-gradient(160deg, #cbd5e1, #f8fafc 45%, #8fa3b8 46%, #45586c); }
+    .scene-option strong { display: block; font-size: 9px; }
+    .scene-option span { display: block; margin-top: 3px; color: #667085; font-size: 7px; }
+    .output-area { overflow: auto; padding: 18px; }
+    .output-empty { max-width: 480px; margin: 90px auto; padding: 25px; border: 1px dashed #b9c4d2; border-radius: 14px; background: #fff; text-align: center; }
+    .output-empty strong { display: block; font-size: 12px; }
+    .output-empty p { color: var(--muted); font-size: 9px; line-height: 1.6; }
+    .output-grid { display: grid; grid-template-columns: repeat(2, minmax(300px, 1fr)); gap: 14px; }
+    .output-card { overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: 0 7px 24px rgba(30,41,59,.07); }
+    .output-visual { height: 205px; }
+    .output-visual svg { display: block; width: 100%; height: 100%; }
+    .output-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; }
+    .output-meta strong { font-size: 10px; }
+    .output-meta span { color: #667085; font-size: 7px; }
+    .modal-backdrop { position: fixed; z-index: 20; inset: 0; display: flex; justify-content: flex-end; background: rgba(15,23,42,.38); }
+    .archive-drawer { width: min(430px, 92vw); height: 100%; display: grid; grid-template-rows: 72px minmax(0, 1fr); background: #fff; box-shadow: -18px 0 48px rgba(15,23,42,.2); }
+    .archive-body { overflow: auto; padding: 18px; }
+    .archive-step { position: relative; margin-left: 10px; padding: 0 0 19px 22px; border-left: 2px solid #dbe4ef; }
+    .archive-step::before { content: ""; position: absolute; left: -6px; top: 1px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+    .archive-step strong { font-size: 10px; }
+    .archive-step p { margin: 4px 0 0; color: #667085; font-size: 8px; line-height: 1.55; }
     .placeholder-view { height: 100%; display: grid; place-items: center; color: var(--muted); }
 
     @media (max-width: 1100px) {
@@ -610,6 +667,48 @@
         </section>`;
       }
 
+      function proposalVisualSvg(proposal, sceneId = 'studio') {
+        const primary = proposal.paletteId?.endsWith('-2') ? '#285A9B' : '#A72B2A';
+        const accent = proposal.paletteId?.endsWith('-2') ? '#D5B36B' : '#285A9B';
+        const scene = sceneId === 'motion'
+          ? `<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#b9d5ea"/><stop offset="1" stop-color="#eef4f6"/></linearGradient></defs><rect width="640" height="260" fill="url(#sky)"/><g stroke="#fff" stroke-width="4" opacity=".8"><path d="M0 42h180M35 67h225M0 92h140"/></g><path d="M0 190h640v70H0Z" fill="#657483"/><path d="M0 206h640" stroke="#e8edf0" stroke-width="4"/>`
+          : sceneId === 'platform'
+            ? `<defs><linearGradient id="station" x2="0" y2="1"><stop stop-color="#dce7ef"/><stop offset="1" stop-color="#f7f8f8"/></linearGradient></defs><rect width="640" height="260" fill="url(#station)"/><path d="M0 54h640M0 54l78 70M150 54l-60 70M270 54l-55 70M390 54l-45 70M510 54l-35 70M630 54l-28 70" stroke="#718398" stroke-width="7" opacity=".55"/><path d="M0 198h640v62H0Z" fill="#a8b0b6"/><path d="M0 208h640" stroke="#f0cf43" stroke-width="5"/>`
+            : sceneId === 'detail'
+              ? `<rect width="640" height="260" fill="#edf0f3"/><circle cx="510" cy="60" r="110" fill="#d9e0e5"/><path d="M0 210h640v50H0Z" fill="#c8d0d7"/>`
+              : `<defs><linearGradient id="studio" x2="0" y2="1"><stop stop-color="#f8fafc"/><stop offset="1" stop-color="#dfe6ed"/></linearGradient></defs><rect width="640" height="260" fill="url(#studio)"/><ellipse cx="330" cy="206" rx="280" ry="22" fill="#718096" opacity=".18"/>`;
+        const layoutGraphic = proposal.layoutId === 'layout-waist-accent'
+          ? `<path d="M78 148c122-2 194-1 272 0 65 2 116-4 163-20" fill="none" stroke="${primary}" stroke-width="10"/><path d="M390 149c47-2 89-9 123-21" fill="none" stroke="${accent}" stroke-width="3"/>`
+          : proposal.layoutId === 'layout-skirt-rhythm'
+            ? `<path d="M68 172h96l27-16 29 16h94l31-20 31 20h110" fill="none" stroke="${primary}" stroke-width="9" stroke-linejoin="round"/>`
+            : `<path d="M62 135h435c30 0 55-7 76-18" fill="none" stroke="${primary}" stroke-width="9"/><path d="M360 147h168" stroke="${accent}" stroke-width="4"/>`;
+        return `<svg viewBox="0 0 640 260" role="img" aria-label="${proposal.title} ${sceneId} 场景预览">${scene}<g transform="translate(0 ${sceneId === 'studio' ? 2 : 22})"><path d="M48 89h405c62 0 108 12 150 54l15 19-17 9H48c-18 0-30-10-30-26v-28c0-18 12-28 30-28Z" fill="#f2f4f5" stroke="#8493a5" stroke-width="2"/><path d="M57 111h398c53 0 92 9 123 29H57Z" fill="#26384d" opacity=".15"/><g fill="#26384d"><path d="M72 113h48v17H72Zm61 0h48v17h-48Zm61 0h48v17h-48Zm61 0h48v17h-48Zm61 0h48v17h-48Zm61 0h48v17h-48Zm61 0h44c26 1 52 5 78 14H438Z"/></g>${layoutGraphic}<g fill="#30343b"><circle cx="134" cy="181" r="11"/><circle cx="164" cy="181" r="11"/><circle cx="455" cy="181" r="11"/><circle cx="485" cy="181" r="11"/></g></g></svg>`;
+      }
+
+      function renderSelect() {
+        return `<section class="select-view" data-view="select"><header class="select-header"><div><h1>候选方案评价与人工选择</h1><p>AI 提供多维解释，最终保留哪些分支由设计者决定</p></div><span class="selection-count">已选 ${state.selectedProposalIds.length} / 最多 4 个</span></header><div class="select-content"><div class="proposal-grid">${state.proposals.map((proposal, index) => {
+          const layout = state.layoutAssets.find(item => item.id === proposal.layoutId);
+          const selected = state.selectedProposalIds.includes(proposal.id);
+          return `<article class="proposal-card ${selected ? 'is-selected' : ''}" data-proposal-id="${proposal.id}"><div class="proposal-preview">${proposalVisualSvg(proposal)}</div><div class="proposal-info"><div class="proposal-title-row"><strong>${proposal.title}</strong>${index < 2 ? '<span class="recommended-tag">AI 建议保留</span>' : ''}</div><p class="proposal-route">${layout?.title || '布局方案'} · ${proposal.paletteId} · 路径可回溯至 ${proposal.generatorId}</p><div class="score-row"><div class="score-cell"><b>${92 - index * 3}</b><span>车体适配</span></div><div class="score-cell"><b>${88 + index}</b><span>文化一致</span></div><div class="score-cell"><b>100</b><span>可追溯</span></div></div><button class="select-button" type="button" data-action="toggle-proposal">${selected ? '已保留 · 点击取消' : '人工选择此方案'}</button></div></article>`;
+        }).join('')}</div><aside class="ai-evaluation"><h2>AI 评价建议</h2><div class="evaluation-card" data-ai-recommendation><strong>建议保留 A 与 B</strong><p>A 的水平延展与车体比例匹配度最高；B 的局部点缀留白更充分。二者可代表“连续色带”和“局部强调”两条不同深化路径。</p></div><div class="evaluation-card"><strong>为什么不直接替你决定</strong><p>评分只用于辅助比较。文化表达的恰当性、品牌气质与最终审美判断仍由设计者掌握。</p></div><div class="evaluation-card"><strong>当前探索覆盖</strong><p>${state.proposals.length} 条生成路径，${new Set(state.proposals.map(item => item.layoutId)).size} 类布局，${new Set(state.proposals.map(item => item.paletteId)).size} 套色彩输入。</p></div></aside></div><footer class="select-footer"><button class="secondary-button" type="button" data-stage-id="compose">返回调整节点</button><button class="primary-button" type="button" data-action="confirm-proposals" ${state.selectedProposalIds.length ? '' : 'disabled'}>确认选择，进入高保真深化</button></footer></section>`;
+      }
+
+      const sceneCatalog = [
+        { id: 'platform', title: '站台到站场景', note: '验证真实站台尺度与辨识度' },
+        { id: 'motion', title: '高速运动场景', note: '验证远距离速度感与色带连续性' },
+        { id: 'studio', title: '侧视展示场景', note: '用于完整审查车身布局和比例' },
+        { id: 'detail', title: '车头细节场景', note: '深化纹样转折和局部材质' },
+      ];
+
+      function renderFidelity() {
+        return `<section class="fidelity-view" data-view="fidelity"><header class="fidelity-header"><div><h1>高保真场景深化</h1><p>将人工选定的方案与真实展示场景交叉生成，形成最终设计资产</p></div><span class="selection-count">${state.selectedProposalIds.length} 个方案 · ${state.selectedSceneIds.length} 个场景</span></header><div class="fidelity-content"><aside class="scene-panel"><div class="scene-scroll"><h2>选择输出场景</h2><p>可多选。每个方案会分别生成对应场景，保留方案—场景映射。</p>${sceneCatalog.map(scene => `<button class="scene-option ${state.selectedSceneIds.includes(scene.id) ? 'is-selected' : ''}" type="button" data-scene-id="${scene.id}" aria-pressed="${state.selectedSceneIds.includes(scene.id)}"><span class="scene-thumb"></span><span><strong>${scene.title}</strong><span>${scene.note}</span></span></button>`).join('')}</div><footer class="side-footer"><button class="primary-button" style="width:100%" type="button" data-action="generate-fidelity" ${state.selectedSceneIds.length ? '' : 'disabled'}>生成 ${state.selectedProposalIds.length * state.selectedSceneIds.length} 张高保真效果</button></footer></aside><div class="output-area">${state.highFidelityOutputs.length ? `<div class="output-grid">${state.highFidelityOutputs.map(output => { const proposal = state.proposals.find(item => item.id === output.proposalId); const scene = sceneCatalog.find(item => item.id === output.sceneId); return `<article class="output-card" data-fidelity-output="${output.id}"><div class="output-visual">${proposalVisualSvg(proposal, output.sceneId)}</div><div class="output-meta"><strong>${proposal.title} · ${scene.title}</strong><span>4K 深化模拟 · 路径已归档</span></div></article>`; }).join('')}</div>` : '<div class="output-empty"><strong>等待生成高保真场景</strong><p>在左侧选择站台、运动、侧视或细节场景。系统会把已选方案及其完整多模态输入继续传入深化模型。</p></div>'}</div></div></section>`;
+      }
+
+      function renderModal() {
+        const layer = document.querySelector('[data-region="modal-layer"]');
+        layer.innerHTML = state.archiveOpen ? `<div class="modal-backdrop"><section class="archive-drawer" data-region="process-archive" role="dialog" aria-modal="true" aria-label="共创过程档案"><header class="module-header"><div><h1>共创过程档案</h1><p>从需求到最终场景的可追溯记录</p></div><button class="top-action" type="button" data-action="close-archive">关闭</button></header><div class="archive-body"><div class="archive-step"><strong>需求与文化意向</strong><p>${state.intentions.join('、')} · CR400BF · 现代、庄重、速度感</p></div><div class="archive-step"><strong>纹样推荐与偏好反馈</strong><p>第 ${state.recommendationRound} 轮 · 已选 ${state.selectedPatternIds.length} 个源纹样</p></div><div class="archive-step"><strong>纹样转化与白模截图</strong><p>${state.generatedVariants.length} 条转化分支 · ${state.captures.length} 个视觉状态</p></div><div class="archive-step"><strong>方案组合探索</strong><p>${state.explorerNodes.length} 个节点 · ${state.explorerEdges.length} 条类型化连接 · ${state.proposals.length} 个候选方案</p></div><div class="archive-step"><strong>人工选择与深化</strong><p>人工保留 ${state.selectedProposalIds.length} 个方案 · 输出 ${state.highFidelityOutputs.length} 张场景效果</p></div></div></section></div>` : '';
+      }
+
       function renderWorkspace() {
         const region = document.querySelector('[data-region="main-workspace"]');
         region.innerHTML = state.activeStage === 'demand'
@@ -620,12 +719,17 @@
               ? renderTransform()
               : state.activeStage === 'compose'
                 ? renderCompose()
+                : state.activeStage === 'select'
+                  ? renderSelect()
+                  : state.activeStage === 'fidelity'
+                    ? renderFidelity()
             : `<section class="placeholder-view" data-view="${state.activeStage}"><p>${stages.find(stage => stage.id === state.activeStage)?.label}</p></section>`;
       }
 
       function renderAll() {
         renderStageNav();
         renderWorkspace();
+        renderModal();
       }
 
       function resetDemo() {
@@ -790,6 +894,39 @@
         if (target.dataset.action === 'duplicate-generator') {
           const generator = nodeById(state.selectedNodeId);
           if (generator?.type === 'generator' && generatorReady(generator.id)) addExplorerNode('generator');
+          renderAll();
+        }
+        if (target.dataset.action === 'toggle-proposal') {
+          const proposal = target.closest('[data-proposal-id]');
+          const proposalId = proposal?.dataset.proposalId;
+          if (proposalId) {
+            state.selectedProposalIds = state.selectedProposalIds.includes(proposalId)
+              ? state.selectedProposalIds.filter(id => id !== proposalId)
+              : state.selectedProposalIds.length < 4 ? [...state.selectedProposalIds, proposalId] : state.selectedProposalIds;
+          }
+          renderAll();
+        }
+        if (target.dataset.action === 'confirm-proposals' && state.selectedProposalIds.length) {
+          state.activeStage = 'fidelity';
+          renderAll();
+        }
+        if (target.dataset.sceneId) {
+          const sceneId = target.dataset.sceneId;
+          state.selectedSceneIds = state.selectedSceneIds.includes(sceneId)
+            ? state.selectedSceneIds.filter(id => id !== sceneId)
+            : [...state.selectedSceneIds, sceneId];
+          renderAll();
+        }
+        if (target.dataset.action === 'generate-fidelity' && state.selectedSceneIds.length) {
+          state.highFidelityOutputs = state.selectedProposalIds.flatMap(proposalId => state.selectedSceneIds.map(sceneId => ({ id: `output-${proposalId}-${sceneId}`, proposalId, sceneId })));
+          renderAll();
+        }
+        if (target.dataset.action === 'open-archive') {
+          state.archiveOpen = true;
+          renderAll();
+        }
+        if (target.dataset.action === 'close-archive') {
+          state.archiveOpen = false;
           renderAll();
         }
         if (target.dataset.action === 'reset-demo') resetDemo();
