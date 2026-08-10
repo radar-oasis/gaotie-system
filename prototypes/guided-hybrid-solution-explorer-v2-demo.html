@@ -971,6 +971,14 @@
         renderWorkspace();
       });
       document.addEventListener('pointerup', () => { draggingMotif = false; draggingNode = null; });
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        if (state.archiveOpen || state.pendingConnection) {
+          state.archiveOpen = false;
+          state.pendingConnection = null;
+          renderAll();
+        }
+      });
 
       window.prototypeApi = { getState: () => clone(state), reset: resetDemo };
       renderAll();

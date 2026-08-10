@@ -399,6 +399,26 @@ describe('guided hybrid solution explorer v2 HTML prototype', () => {
     click(document, '[data-action="open-archive"]');
     expect(document.querySelector('[data-region="process-archive"]')).not.toBeNull();
   });
+
+  it('stays standalone, uses explicit button types, and closes overlays with Escape', async () => {
+    const { document, html } = await loadPrototype();
+
+    expect(html).not.toMatch(/<script[^>]+src=/i);
+    expect(html).not.toMatch(/<link[^>]+href=/i);
+    expect(html).not.toMatch(/TODO|FIXME/);
+    expect(
+      [...document.querySelectorAll('button')].every(
+        (button) => button.getAttribute('type') === 'button',
+      ),
+    ).toBe(true);
+
+    click(document, '[data-action="open-archive"]');
+    const KeyboardEventConstructor = document.defaultView?.KeyboardEvent;
+    if (!KeyboardEventConstructor) throw new Error('Missing KeyboardEvent constructor');
+    document.dispatchEvent(new KeyboardEventConstructor('keydown', { key: 'Escape', bubbles: true }));
+
+    expect(document.querySelector('[data-region="process-archive"]')).toBeNull();
+  });
 });
 
 export { click, input, loadPrototype };
