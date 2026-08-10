@@ -84,6 +84,12 @@ function advanceToRecommendation(document: Document): void {
   click(document, '[data-action="confirm-demand"]');
 }
 
+function advanceToTransform(document: Document): void {
+  advanceToRecommendation(document);
+  click(document, '[data-pattern-id="minimal-dragon"] [data-action="select-pattern"]');
+  click(document, '[data-action="confirm-patterns"]');
+}
+
 describe('guided hybrid solution explorer v2 HTML prototype', () => {
   it('renders a six-stage standalone workflow at demand analysis', async () => {
     const { document, window } = await loadPrototype();
@@ -137,6 +143,31 @@ describe('guided hybrid solution explorer v2 HTML prototype', () => {
     expect(
       document.querySelector('[data-action="confirm-patterns"]')?.hasAttribute('disabled'),
     ).toBe(false);
+  });
+
+  it('generates three motif variants from separate prompt branches', async () => {
+    const { document, window } = await loadPrototype();
+    advanceToTransform(document);
+
+    click(document, '[data-action="generate-variants"]');
+
+    expect(window.prototypeApi.getState().generatedVariants).toHaveLength(3);
+    expect(document.querySelectorAll('[data-variant-id]')).toHaveLength(3);
+  });
+
+  it('changes motif placement and stores multiple named visual captures', async () => {
+    const { document, window } = await loadPrototype();
+    advanceToTransform(document);
+    click(document, '[data-action="generate-variants"]');
+
+    input(document, '[data-control="motif-x"]', '68');
+    input(document, '[data-control="motif-scale"]', '1.25');
+    click(document, '[data-action="capture-state"]');
+    input(document, '[data-control="motif-x"]', '39');
+    click(document, '[data-action="capture-state"]');
+
+    expect(window.prototypeApi.getState().captures).toHaveLength(2);
+    expect(document.querySelectorAll('[data-capture-id]')).toHaveLength(2);
   });
 });
 
