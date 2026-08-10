@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>中国文化主题高铁涂装｜引导式节点画布原型</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #dfe5ef;
+      --text: #182230;
+      --muted: #667085;
+      --ai: #2563eb;
+      --human: #e76f32;
+      --knowledge: #198754;
+      --artifact: #7c3aed;
+      --shadow: 0 10px 30px rgba(37, 49, 69, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 218px minmax(640px, 1fr) 360px;
+      grid-template-rows: 64px minmax(0, 1fr) 58px;
+      height: 100%;
+      min-width: 1100px;
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: #172033;
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .brand-copy strong { display: block; font-size: 14px; }
+    .brand-copy span { color: var(--muted); font-size: 11px; }
+    .topbar-spacer { flex: 1; }
+    .topbar-group { display: flex; align-items: center; gap: 8px; }
+    .topbar-button,
+    .timeline-button {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: #344054;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .topbar-button:hover,
+    .timeline-button:hover { border-color: #94a3b8; background: #f8fafc; }
+    .topbar-button.is-active { border-color: var(--ai); background: #eff6ff; color: #1d4ed8; }
+    .prototype-badge {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #fff4e8;
+      color: #b54708;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stage-nav,
+    .inspector {
+      min-height: 0;
+      overflow: auto;
+      background: var(--panel);
+    }
+
+    .stage-nav {
+      border-right: 1px solid var(--line);
+      padding: 18px 14px;
+    }
+
+    .stage-nav h2,
+    .inspector h2 { margin: 0 0 14px; font-size: 14px; }
+    .stage-nav p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .stage-list { display: grid; gap: 7px; margin-top: 18px; }
+    .stage-button {
+      display: grid;
+      grid-template-columns: 27px 1fr;
+      gap: 9px;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      background: transparent;
+      color: #475467;
+      text-align: left;
+    }
+    .stage-button:hover { background: #f5f8fd; }
+    .stage-button.is-current { border-color: #bfd3f7; background: #eff6ff; color: #1d4ed8; }
+    .stage-index {
+      width: 27px;
+      height: 27px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #eef2f6;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .stage-button.is-current .stage-index { background: var(--ai); color: #fff; }
+    .stage-copy strong { display: block; font-size: 12px; }
+    .stage-copy span { display: block; margin-top: 2px; color: #98a2b3; font-size: 10px; }
+
+    .canvas-shell {
+      position: relative;
+      overflow: auto;
+      background-color: #f8fafe;
+      background-image: radial-gradient(#cbd5e1 0.8px, transparent 0.8px);
+      background-size: 20px 20px;
+      padding: 0;
+    }
+
+    .canvas-toolbar {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+    }
+    .canvas-toolbar strong { font-size: 12px; }
+    .canvas-toolbar span { color: var(--muted); font-size: 11px; }
+    .canvas-workspace { position: relative; width: 2360px; height: 840px; }
+    .edge-layer { position: absolute; inset: 0; width: 2360px; height: 840px; pointer-events: none; }
+    .edge-line { fill: none; stroke: #aab7c8; stroke-width: 2; }
+    .edge-line.is-ai { stroke: #60a5fa; stroke-dasharray: 7 6; }
+    .edge-line.is-muted { opacity: 0.2; }
+
+    .canvas-node {
+      position: absolute;
+      width: 210px;
+      padding: 15px;
+      border: 1px solid #b8c5d8;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      text-align: left;
+      transition: opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    }
+    .canvas-node:hover { transform: translateY(-2px); }
+    .canvas-node.is-future { opacity: 0.5; }
+    .canvas-node.is-muted { opacity: 0.18; }
+    body.show-all-branches .canvas-node.is-muted { opacity: 0.64; }
+
+    .canvas-node.is-current {
+      border-color: var(--ai);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), var(--shadow);
+    }
+
+    .canvas-node[data-node-type="resource"] { border-top: 4px solid var(--knowledge); }
+    .canvas-node[data-node-type="operation"] { border-top: 4px solid var(--ai); }
+    .canvas-node[data-node-type="artifact"] { border-top: 4px solid var(--artifact); }
+    .canvas-node[data-node-type="suggestion"] { border: 2px dashed #60a5fa; background: #f2f7ff; }
+
+    .node-kicker {
+      margin-bottom: 8px;
+      color: var(--human);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .node-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .node-status { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
+    .canvas-node.is-complete .node-status { background: #22c55e; }
+    .node-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .node-tag { padding: 3px 6px; border-radius: 999px; background: #f2f4f7; color: #667085; font-size: 9px; }
+
+    .canvas-node h3 { margin: 0 0 7px; font-size: 15px; }
+    .canvas-node p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+    .inspector {
+      border-left: 1px solid var(--line);
+      padding: 20px;
+    }
+
+    .inspector-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .inspector-kicker { margin-bottom: 5px; color: var(--ai); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+    .inspector-heading h2 { margin-bottom: 4px; font-size: 18px; }
+    .inspector-heading p { margin: 0; color: var(--muted); font-size: 11px; }
+    .source-pill { flex: none; padding: 5px 8px; border-radius: 999px; font-size: 10px; font-weight: 750; }
+    .source-pill.human { background: #fff1e9; color: #c2410c; }
+    .source-pill.ai { background: #eff6ff; color: #1d4ed8; }
+    .source-pill.knowledge { background: #ecfdf3; color: #027a48; }
+    .inspector-section { margin-top: 18px; }
+    .inspector-section h3 { margin: 0 0 9px; font-size: 12px; }
+    .detail-list { display: grid; gap: 7px; }
+    .detail-row { display: grid; grid-template-columns: 88px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid #eef1f5; font-size: 11px; }
+    .detail-row span:first-child { color: var(--muted); }
+
+    .inspector-card {
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .inspector-card strong { display: block; margin-bottom: 6px; }
+    .inspector-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+
+    .demo-timeline {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .timeline-progress { flex: 1; height: 5px; overflow: hidden; border-radius: 999px; background: #eef2f6; }
+    .timeline-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--human), var(--ai)); transition: width .2s ease; }
+    .timeline-button.primary { border-color: #1d4ed8; background: #1d4ed8; color: #fff; }
+    .legend { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin: 7px 0; color: var(--muted); font-size: 10px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .action-button {
+      width: 100%;
+      min-height: 40px;
+      padding: 0 13px;
+      border: 1px solid #1d4ed8;
+      border-radius: 10px;
+      background: #1d4ed8;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .action-button.secondary { border-color: var(--line); background: #fff; color: #344054; }
+    .action-row { display: flex; gap: 8px; }
+    .action-row .action-button { flex: 1; }
+    .motif-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .motif-card { padding: 8px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+    .motif-card.is-main { border-color: var(--human); box-shadow: 0 0 0 2px rgba(231,111,50,.12); }
+    .motif-card.is-secondary { border-color: var(--ai); }
+    .motif-preview { height: 74px; display: grid; place-items: center; overflow: hidden; border-radius: 8px; background: #f7f7f4; }
+    .motif-preview svg { width: 100%; height: 100%; }
+    .motif-card strong { display: block; margin: 7px 0 5px; font-size: 11px; }
+    .motif-actions { display: grid; gap: 4px; }
+    .mini-button { min-height: 26px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: #475467; font-size: 9px; }
+    .mini-button.is-active { border-color: var(--ai); background: #eff6ff; color: #1d4ed8; }
+    .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .analysis-chip { padding: 8px; border-radius: 9px; background: #f6f8fb; font-size: 10px; line-height: 1.45; }
+    .analysis-chip b { display: block; margin-bottom: 2px; color: #344054; }
+    .range-control { margin: 11px 0; }
+    .range-label { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 5px; font-size: 10px; color: var(--muted); }
+    .range-label output { color: #344054; font-weight: 750; }
+    .range-control input[type="range"] { width: 100%; accent-color: var(--ai); }
+    .select-control { width: 100%; min-height: 36px; border: 1px solid var(--line); border-radius: 9px; padding: 0 9px; background: #fff; color: #344054; font-size: 11px; }
+    .prompt-output { padding: 12px; border: 1px solid #c7d7f3; border-radius: 11px; background: #f5f8ff; color: #344054; font-size: 10px; line-height: 1.7; }
+    .compare-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .compare-tile { padding: 8px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+    .compare-tile span { display: block; margin-bottom: 5px; color: var(--muted); font-size: 9px; }
+    .compare-tile svg { width: 100%; height: 90px; border-radius: 7px; background: #f7f7f4; }
+    .train-preview {
+      position: relative;
+      padding: 10px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #f7f9fc, #ffffff);
+    }
+    .train-preview svg { display: block; width: 100%; height: auto; }
+    .train-zone { opacity: .12; transition: opacity .18s ease, fill .18s ease; }
+    .train-zone.is-active { opacity: 1; }
+    .layout-zone-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .layout-zone-button { display: flex; align-items: center; justify-content: space-between; min-height: 34px; padding: 0 9px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: #475467; font-size: 10px; }
+    .layout-zone-button.is-current { border-color: var(--ai); background: #eff6ff; color: #1d4ed8; }
+    .layout-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .layout-option { min-width: 44px; min-height: 30px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #475467; font-size: 10px; }
+    .layout-option.is-active { border-color: var(--human); background: #fff4ed; color: #c2410c; }
+    .density-card { padding: 11px; border-radius: 11px; background: #f7f9fc; }
+    .density-head { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 10px; }
+    .density-bar { height: 7px; overflow: hidden; border-radius: 999px; background: #e4e7ec; }
+    .density-bar span { display: block; height: 100%; border-radius: inherit; background: #22c55e; }
+    .density-card.is-warning .density-bar span { background: #f59e0b; }
+    .recommendation-card { padding: 12px; border: 1px solid #bfdbfe; border-radius: 11px; background: #eff6ff; }
+    .recommendation-card strong { display: block; margin-bottom: 5px; color: #1d4ed8; font-size: 11px; }
+    .recommendation-card p { margin: 0 0 9px; color: #475467; font-size: 10px; line-height: 1.6; }
+    .moodboard {
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap: 7px;
+      height: 126px;
+    }
+    .moodboard-main,
+    .moodboard-stack > div { position: relative; overflow: hidden; border-radius: 10px; }
+    .moodboard-main { background: linear-gradient(135deg, #8f1d1d 0 58%, #d4a746 58% 66%, #f5f1e8 66%); }
+    .moodboard-main:before { content: ''; position: absolute; width: 76px; height: 76px; left: 22px; top: 22px; border: 9px double rgba(245,241,232,.8); border-radius: 50%; }
+    .moodboard-main:after { content: '中国文化'; position: absolute; left: 16px; bottom: 10px; color: #fff; font-size: 11px; letter-spacing: .2em; }
+    .moodboard-stack { display: grid; gap: 7px; }
+    .moodboard-stack > div:first-child { background: repeating-linear-gradient(135deg, #30343b 0 9px, #f5f1e8 9px 18px); }
+    .moodboard-stack > div:last-child { background: radial-gradient(circle at 30% 40%, #f5f1e8 0 13%, transparent 14%), linear-gradient(145deg,#d4a746,#9b6823); }
+    .palette-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .palette-swatch { min-height: 58px; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: 10px; background: #fff; }
+    .palette-swatch:hover { border-color: #94a3b8; }
+    .palette-swatch.is-used { border-color: var(--ai); }
+    .swatch-color { display: block; height: 35px; }
+    .swatch-label { display: block; padding: 5px 2px; color: #475467; font-size: 8px; text-align: center; }
+    .color-region-list { display: grid; gap: 6px; }
+    .color-region-button { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 8px; min-height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: #475467; font-size: 10px; text-align: left; }
+    .color-region-button.is-current { border-color: var(--ai); background: #eff6ff; }
+    .color-dot { width: 16px; height: 16px; border: 1px solid rgba(0,0,0,.1); border-radius: 5px; }
+    .color-ratio { display: flex; height: 12px; overflow: hidden; border-radius: 999px; background: #eef2f6; }
+    .color-ratio span:nth-child(1) { width: 62%; background: #F5F1E8; }
+    .color-ratio span:nth-child(2) { width: 24%; background: #B8322A; }
+    .color-ratio span:nth-child(3) { width: 9%; background: #D4A746; }
+    .color-ratio span:nth-child(4) { width: 5%; background: #30343B; }
+    .case-list { display: grid; gap: 8px; }
+    .case-card { display: grid; grid-template-columns: 92px 1fr; gap: 9px; padding: 9px; border: 1px solid var(--line); border-radius: 11px; background: #fff; text-align: left; }
+    .case-card.is-selected { border-color: var(--ai); box-shadow: 0 0 0 2px rgba(37,99,235,.1); }
+    .case-thumb { min-height: 62px; display: grid; place-items: center; overflow: hidden; border-radius: 8px; background: #f5f7fa; }
+    .case-thumb svg { width: 100%; }
+    .case-copy strong { display: block; margin: 3px 0 5px; font-size: 10px; }
+    .case-copy span { color: var(--muted); font-size: 9px; line-height: 1.45; }
+    .text-control { width: 100%; min-height: 78px; resize: vertical; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: #344054; font-size: 11px; line-height: 1.55; }
+    .package-list { display: grid; gap: 7px; }
+    .package-port { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+    .package-port.is-ready { border-color: #86d3a7; background: #f0fdf4; }
+    .port-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; background: #eef2f6; color: #667085; font-size: 12px; font-weight: 800; }
+    .package-port.is-ready .port-icon { background: #dcfce7; color: #15803d; }
+    .port-copy strong { display: block; font-size: 10px; }
+    .port-copy span { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; }
+    .port-status { color: #667085; font-size: 9px; font-weight: 700; }
+    .package-status { padding: 11px; border-radius: 10px; background: #fff7ed; color: #9a3412; font-size: 10px; line-height: 1.55; }
+    .package-status.is-ready { background: #ecfdf3; color: #027a48; }
+    .candidate-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+    .candidate-card { min-width: 0; padding: 7px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: #475467; text-align: left; }
+    .candidate-card.is-selected { border-color: var(--ai); background: #eff6ff; box-shadow: 0 0 0 2px rgba(37,99,235,.1); }
+    .candidate-card svg { display: block; width: 100%; height: 52px; margin-bottom: 5px; border-radius: 6px; background: #f7f9fc; }
+    .candidate-card strong { display: block; overflow: hidden; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .candidate-card span { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; }
+    .metric-list { display: grid; gap: 7px; }
+    .metric-row { display: grid; grid-template-columns: 72px 1fr 26px; align-items: center; gap: 7px; color: #475467; font-size: 9px; }
+    .metric-track { height: 6px; overflow: hidden; border-radius: 999px; background: #e7ecf2; }
+    .metric-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #60a5fa, #2563eb); }
+    .version-lineage { display: flex; align-items: center; justify-content: center; min-height: 42px; padding: 9px; border: 1px dashed #a78bfa; border-radius: 11px; background: #faf7ff; color: #6d28d9; font-size: 11px; font-weight: 750; }
+    .decision-card { padding: 12px; border: 1px solid #bfdbfe; border-radius: 11px; background: #f5f8ff; }
+    .decision-card strong { display: block; margin-bottom: 5px; color: #1d4ed8; font-size: 11px; }
+    .decision-card p { margin: 0; color: #475467; font-size: 10px; line-height: 1.65; }
+    .archive-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .archive-item { padding: 10px; border: 1px solid #cce7d5; border-radius: 10px; background: #f3fcf6; }
+    .archive-item strong { display: block; margin-bottom: 3px; color: #027a48; font-size: 10px; }
+    .archive-item span { color: var(--muted); font-size: 8px; line-height: 1.45; }
+    .modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(17,24,39,.56); }
+    .comparison-modal { width: min(1080px, 96vw); max-height: 88vh; overflow: auto; padding: 20px; border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(17,24,39,.3); }
+    .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+    .modal-head h2 { margin: 0 0 5px; font-size: 18px; }
+    .modal-head p { margin: 0; color: var(--muted); font-size: 11px; }
+    .icon-button { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: #475467; }
+    .comparison-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .comparison-column { padding: 12px; border: 1px solid var(--line); border-radius: 13px; }
+    .comparison-column.is-selected { border-color: var(--ai); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+    .comparison-column h3 { margin: 9px 0 5px; font-size: 13px; }
+    .comparison-column > p { min-height: 34px; margin: 0 0 10px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+    .comparison-column .train-preview { padding: 5px; }
+    .comparison-column .action-button { margin-top: 12px; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid rgba(37,99,235,.32); outline-offset: 2px; }
+
+    @media (max-width: 1180px) {
+      body { overflow: auto; }
+      .app-shell { grid-template-columns: 190px minmax(620px, 1fr); grid-template-rows: 64px minmax(620px, 1fr) auto 58px; min-width: 860px; min-height: 100%; }
+      .inspector { grid-column: 1 / -1; border-top: 1px solid var(--line); border-left: 0; }
+      .demo-timeline { position: sticky; bottom: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+
+    body.workspace-view .app-shell { grid-template-columns: 76px minmax(640px, 1fr) 420px; }
+    body.workspace-view .stage-nav { padding-inline: 9px; }
+    body.workspace-view .stage-nav > h2,
+    body.workspace-view .stage-nav > p,
+    body.workspace-view .stage-copy,
+    body.workspace-view .legend { display: none; }
+    body.workspace-view .stage-list { margin-top: 0; }
+    body.workspace-view .stage-button { display: grid; grid-template-columns: 1fr; place-items: center; padding: 8px; }
+
+    @media (max-width: 1180px) {
+      body.workspace-view .app-shell { grid-template-columns: 76px minmax(620px, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell" data-app="guided-canvas">
+    <header class="topbar">
+      <div class="brand-mark">轨</div>
+      <div class="brand-copy">
+        <strong>中国文化主题高铁涂装</strong>
+        <span>引导式人机共创节点画布</span>
+      </div>
+      <span class="prototype-badge">原型模拟</span>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-group">
+        <button class="topbar-button is-active" type="button" data-action="set-view" data-view="flow">流程视图</button>
+        <button class="topbar-button" type="button" data-action="set-view" data-view="workspace">编辑工作台</button>
+        <button class="topbar-button" type="button" data-action="toggle-branches">查看全部分支</button>
+        <button class="topbar-button" type="button" data-action="reset-demo">重置演示</button>
+      </div>
+    </header>
+
+    <aside class="stage-nav" data-region="stage-nav"></aside>
+
+    <main class="canvas-shell" data-region="node-canvas" aria-label="设计流程节点画布"></main>
+
+    <aside class="inspector" data-region="inspector"></aside>
+
+    <footer class="demo-timeline" data-region="demo-timeline"></footer>
+  </div>
+
+  <div data-region="comparison-layer"></div>
+
+  <script>
+    (() => {
+      const INITIAL_STATE = {
+        archivedVersion: null,
+        candidatesGenerated: false,
+        comparisonOpen: false,
+        demoStep: 0,
+        evaluationReady: false,
+        generatedMotif: false,
+        activeLayoutZone: 'windowBand',
+        activeColorRegion: 'body',
+        caseNote: '',
+        colors: {
+          body: '#F5F1E8',
+          windowBand: '#30343B',
+          waistline: '#D4A746',
+          structure: '#30343B',
+          motif: '#D4A746',
+        },
+        layout: {
+          windowBand: 'none',
+          waistline: 'none',
+          door: 'none',
+          roofSide: 'none',
+          lowerSide: 'none',
+          skirt: 'none',
+          noseSide: 'none',
+        },
+        motifSettings: {
+          abstraction: 60,
+          elongation: 85,
+          simplification: 70,
+          repeatMode: '非连续单元纹样',
+        },
+        motifs: {
+          main: null,
+          secondary: [],
+        },
+        paletteExtracted: false,
+        refinedVersionCreated: false,
+        selectedCandidateId: null,
+        selectedCaseId: null,
+        selectedNodeId: 'brief',
+        showAllBranches: false,
+        view: 'flow',
+      };
+      const clone = (value) => JSON.parse(JSON.stringify(value));
+      let state = clone(INITIAL_STATE);
+
+      const stages = [
+        { id: 'task', label: '任务与文化语义', hint: '界定目标与文化方向', primaryNodeId: 'brief' },
+        { id: 'motif', label: '纹样资产', hint: '图谱检索与筛选', primaryNodeId: 'motif-retrieval' },
+        { id: 'transform', label: '纹样转化', hint: '识别、提示词与变体', primaryNodeId: 'motif-transform' },
+        { id: 'layout', label: '车体布局', hint: '区域选择与密度控制', primaryNodeId: 'layout-v1' },
+        { id: 'color', label: '色彩方案', hint: '色板提取与区域配色', primaryNodeId: 'color-v1' },
+        { id: 'case', label: '案例参考', hint: '检索可迁移设计语言', primaryNodeId: 'case-ref' },
+        { id: 'generate', label: '方案生成', hint: '组合输入与分支探索', primaryNodeId: 'design-package' },
+        { id: 'evaluate', label: '评价与归档', hint: '比较、优化与沉淀', primaryNodeId: 'proposal-a1' },
+      ];
+
+      const workflowNodes = {
+        brief: {
+          id: 'brief', stage: 'task', step: 0, x: 46, y: 92, type: 'resource',
+          title: '设计任务', kicker: '用户定义', source: 'human',
+          summary: '中国文化主题 · CR400BF · 现代庄重 · 具有速度感',
+          details: [['车型', 'CR400BF 侧视白模'], ['文化方向', '中国文化'], ['目标气质', '现代、庄重、速度感'], ['基础约束', '保留窗门结构、避免满涂、保持远距识别']],
+          tags: ['任务书', '硬约束'],
+        },
+        semantics: {
+          id: 'semantics', stage: 'task', step: 1, x: 314, y: 92, type: 'operation',
+          title: '文化语义解析', kicker: 'AI 分析', source: 'ai',
+          summary: '从中国文化主题发散龙、祥云、黄河等候选意象',
+          details: [['输入', '中国文化主题'], ['候选意象', '龙、祥云、黄河、水纹'], ['设计师决策', '确认可进入纹样检索的意象']],
+          tags: ['语义发散', '可解释推荐'],
+        },
+        'motif-retrieval': {
+          id: 'motif-retrieval', stage: 'motif', step: 2, x: 582, y: 92, type: 'operation',
+          title: '纹样检索', kicker: '知识图谱', source: 'knowledge',
+          summary: '按文化意象检索龙纹、祥云纹与黄河水纹',
+          details: [['知识来源', '文化纹样知识图谱'], ['主纹样候选', '龙纹'], ['辅助候选', '祥云纹、黄河水纹']],
+          tags: ['图谱检索', '候选筛选'],
+        },
+        'motif-transform': {
+          id: 'motif-transform', stage: 'transform', step: 3, x: 850, y: 92, type: 'operation',
+          title: '纹样转化', kicker: '人机共调', source: 'ai',
+          summary: '识别龙纹特征，生成适配修长车身的结构化提示词',
+          details: [['输入', '主纹样：传统龙纹'], ['AI 识别', '龙首、龙身曲线、传统线描'], ['用户控制', '抽象、横向延展、线条简化、重复方式']],
+          tags: ['图像识别', '提示词工程'],
+        },
+        'motif-v1': {
+          id: 'motif-v1', stage: 'transform', step: 3, x: 1118, y: 92, type: 'artifact',
+          title: '流线龙纹 v1', kicker: '视觉资产', source: 'ai',
+          summary: '保留文化身份、降低细节密度、强化水平流动方向',
+          details: [['来源', '纹样转化节点'], ['版本', 'v1'], ['用途', '车窗带与腰线局部装饰']],
+          tags: ['透明纹样', '版本化'],
+        },
+        'layout-v1': {
+          id: 'layout-v1', stage: 'layout', step: 4, x: 582, y: 316, type: 'artifact',
+          title: '疏朗流线布局 v1', kicker: '布局方案', source: 'human',
+          summary: '车窗带 A3 + 腰线 B2 + 车头侧 G2，其余区域留白',
+          details: [['主区域', '车窗带 A3'], ['辅助区域', '腰线 B2'], ['点缀区域', '车头侧 G2'], ['视觉密度', '42%']],
+          tags: ['稀疏布局', '区域约束'],
+        },
+        'color-v1': {
+          id: 'color-v1', stage: 'color', step: 5, x: 850, y: 316, type: 'artifact',
+          title: '朱红琉璃配色 v1', kicker: '色彩方案', source: 'human',
+          summary: '暖白车身、中国红窗带、琉璃金腰线、墨灰结构',
+          details: [['主色', '暖白 #F5F1E8'], ['窗带', '中国红 #B8322A'], ['腰线', '琉璃金 #D4A746'], ['结构色', '墨灰 #30343B']],
+          tags: ['情绪板取色', '区域配色'],
+        },
+        'case-ref': {
+          id: 'case-ref', stage: 'case', step: 6, x: 582, y: 540, type: 'resource',
+          title: 'CR400BF 案例参考', kicker: '可选输入', source: 'knowledge',
+          summary: '仅迁移车窗带位置、车头收束比例与 CR 标识关系',
+          details: [['检索依据', '车型、布局、色彩关系'], ['参考范围', '位置、比例、标识关系'], ['排除', '车型文字、原案例配色']],
+          tags: ['案例图谱', '非复制式参考'],
+        },
+        'train-template': {
+          id: 'train-template', stage: 'generate', step: 7, x: 850, y: 540, type: 'resource',
+          title: 'CR400BF 侧视白模', kicker: '车型资产', source: 'knowledge',
+          summary: '提供车身比例、窗门位置和结构边界',
+          details: [['视图', '严格侧视'], ['结构', '车头、车门、车窗、转向架'], ['作用', '限制生成结果的基础车型']],
+          tags: ['车型约束', '白模'],
+        },
+        'design-package': {
+          id: 'design-package', stage: 'generate', step: 7, x: 1118, y: 316, type: 'operation',
+          title: '结构化设计包', kicker: '输入汇聚', source: 'ai',
+          summary: '纹样、布局、色彩、白模和案例在此汇聚，不是简单线性传递',
+          details: [['必需输入', '白模、纹样、布局、色彩'], ['可选输入', '案例参考'], ['输出', '完整多模态生成上下文']],
+          tags: ['多输入', '可检查'],
+        },
+        'proposal-a': {
+          id: 'proposal-a', stage: 'generate', step: 8, x: 1412, y: 184, type: 'artifact', branch: 'a',
+          title: '方案 A · 平衡型', kicker: '候选方案', source: 'ai',
+          summary: '龙纹、红色窗带和金色腰线保持均衡',
+          details: [['方向', '平衡型'], ['状态', '待比较'], ['版本', 'A / v1']],
+          tags: ['候选 A', '已收藏'],
+        },
+        'proposal-b': {
+          id: 'proposal-b', stage: 'generate', step: 8, x: 1412, y: 356, type: 'artifact', branch: 'b',
+          title: '方案 B · 极简型', kicker: '候选方案', source: 'ai',
+          summary: '降低龙纹面积与金色比例，强化留白',
+          details: [['方向', '极简型'], ['状态', '未选择'], ['版本', 'B / v1']],
+          tags: ['候选 B', '低密度'],
+        },
+        'proposal-c': {
+          id: 'proposal-c', stage: 'generate', step: 8, x: 1412, y: 528, type: 'artifact', branch: 'c',
+          title: '方案 C · 文化强化', kicker: '候选方案', source: 'ai',
+          summary: '增加祥云辅助纹样与车头文化符号',
+          details: [['方向', '文化强化型'], ['状态', '未选择'], ['版本', 'C / v1']],
+          tags: ['候选 C', '高文化显著性'],
+        },
+        'ai-suggestion': {
+          id: 'ai-suggestion', stage: 'evaluate', step: 9, x: 1706, y: 184, type: 'suggestion', branch: 'a',
+          title: 'AI 优化建议', kicker: '待人工确认', source: 'ai',
+          summary: '车门附近纹样略密，建议降低局部密度并增加留白',
+          details: [['发现', '门区视觉拥挤'], ['建议', '纹样密度降低 18%'], ['执行方式', '采用后新建 A-1，不覆盖 A']],
+          tags: ['虚线建议', '可接受/忽略'],
+        },
+        'proposal-a1': {
+          id: 'proposal-a1', stage: 'evaluate', step: 9, x: 1974, y: 184, type: 'artifact', branch: 'a',
+          title: '方案 A-1 · 局部优化', kicker: '优化版本', source: 'human',
+          summary: '保留方案 A，总体不变，仅降低车门附近纹样密度',
+          details: [['父版本', '方案 A'], ['修改', '门区纹样密度 -18%'], ['原则', '非覆盖式版本创建']],
+          tags: ['候选最终方案', '可追溯'],
+        },
+        archive: {
+          id: 'archive', stage: 'evaluate', step: 10, x: 2192, y: 184, type: 'artifact', branch: 'a',
+          title: '最终方案与过程档案', kicker: '已归档', source: 'human',
+          summary: '效果图、设计包、演化路径、提示词和决策理由共同沉淀',
+          details: [['最终版本', '方案 A-1'], ['过程', '10 个阶段动作'], ['输出', '效果图、规范、过程摘要']],
+          tags: ['最终输出', '过程档案'],
+        },
+      };
+
+      const edges = [
+        ['brief', 'semantics'], ['semantics', 'motif-retrieval'], ['motif-retrieval', 'motif-transform'],
+        ['motif-transform', 'motif-v1'], ['motif-v1', 'design-package'], ['layout-v1', 'design-package'],
+        ['color-v1', 'design-package'], ['case-ref', 'design-package'], ['train-template', 'design-package'],
+        ['design-package', 'proposal-a'], ['design-package', 'proposal-b'], ['design-package', 'proposal-c'],
+        ['proposal-a', 'ai-suggestion'], ['ai-suggestion', 'proposal-a1'], ['proposal-a1', 'archive'],
+      ];
+
+      const demoSequence = ['brief', 'semantics', 'motif-retrieval', 'motif-transform', 'layout-v1', 'color-v1', 'case-ref', 'design-package', 'proposal-a', 'ai-suggestion', 'archive'];
+
+      const sourceLabel = { human: '用户主导', ai: 'AI 协同', knowledge: '知识支撑' };
+
+      function selectedNode() { return workflowNodes[state.selectedNodeId] || workflowNodes.brief; }
+
+      function stageIndexForNode(nodeId) {
+        return stages.findIndex((stage) => stage.id === workflowNodes[nodeId]?.stage);
+      }
+
+      function selectNode(nodeId) {
+        if (!workflowNodes[nodeId]) return;
+        state.selectedNodeId = nodeId;
+        state.demoStep = Math.max(state.demoStep, workflowNodes[nodeId].step);
+        renderAll();
+      }
+
+      function selectStage(stageId) {
+        const stage = stages.find((item) => item.id === stageId);
+        if (stage) selectNode(stage.primaryNodeId);
+      }
+
+      function setDemoStep(step) {
+        const boundedStep = Math.max(0, Math.min(10, step));
+        state.demoStep = boundedStep;
+        state.selectedNodeId = demoSequence[boundedStep];
+        renderAll();
+      }
+
+      function toggleBranches() {
+        state.showAllBranches = !state.showAllBranches;
+        document.body.classList.toggle('show-all-branches', state.showAllBranches);
+        renderAll();
+      }
+
+      function resetDemo() {
+        state = clone(INITIAL_STATE);
+        document.body.classList.remove('show-all-branches');
+        document.body.classList.remove('workspace-view');
+        renderAll();
+      }
+
+      function edgePath(from, to) {
+        const startX = from.x + 210;
+        const startY = from.y + 64;
+        const endX = to.x;
+        const endY = to.y + 64;
+        const bend = Math.max(54, (endX - startX) * .52);
+        return `M ${startX} ${startY} C ${startX + bend} ${startY}, ${endX - bend} ${endY}, ${endX} ${endY}`;
+      }
+
+      function isInactiveBranch(node) {
+        return Boolean(node.branch && node.branch !== 'a');
+      }
+
+      function nodeIsComplete(node) {
+        if (node.id === 'motif-v1') return state.generatedMotif;
+        if (['proposal-a', 'proposal-b', 'proposal-c'].includes(node.id)) return state.candidatesGenerated;
+        if (node.id === 'ai-suggestion') return state.evaluationReady;
+        if (node.id === 'proposal-a1') return state.refinedVersionCreated;
+        if (node.id === 'archive') return Boolean(state.archivedVersion);
+        return node.step <= state.demoStep;
+      }
+
+      function renderStageNav() {
+        const currentStage = selectedNode().stage;
+        const region = document.querySelector('[data-region="stage-nav"]');
+        region.innerHTML = `
+          <h2>设计阶段</h2>
+          <p>跟随案例逐步播放，也可以随时点击已知节点建立新的探索起点。</p>
+          <div class="stage-list">
+            ${stages.map((stage, index) => `
+              <button class="stage-button ${stage.id === currentStage ? 'is-current' : ''}" type="button" data-stage="${stage.id}" ${stage.id === currentStage ? 'aria-current="step"' : ''}>
+                <span class="stage-index">${index + 1}</span>
+                <span class="stage-copy"><strong>${stage.label}</strong><span>${stage.hint}</span></span>
+              </button>`).join('')}
+          </div>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--human)"></span>人工输入与关键决策</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--ai)"></span>AI 分析与生成操作</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--knowledge)"></span>知识与资源节点</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--artifact)"></span>设计产物与版本</div>
+          </div>`;
+      }
+
+      function renderCanvas() {
+        const region = document.querySelector('[data-region="node-canvas"]');
+        region.innerHTML = `
+          <div class="canvas-toolbar">
+            <strong>主流程与候选分支</strong>
+            <span>实线为已采用路径，虚线为待确认 AI 建议</span>
+            <span style="margin-left:auto">当前分支：方案 A → A-1</span>
+          </div>
+          <div class="canvas-workspace">
+            <svg class="edge-layer" aria-hidden="true" viewBox="0 0 2360 840">
+              <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8ea0b7"></path></marker></defs>
+              ${edges.map(([fromId, toId]) => {
+                const from = workflowNodes[fromId]; const to = workflowNodes[toId];
+                const muted = isInactiveBranch(from) || isInactiveBranch(to);
+                const ai = to.type === 'suggestion';
+                return `<path class="edge-line ${muted ? 'is-muted' : ''} ${ai ? 'is-ai' : ''}" d="${edgePath(from, to)}" marker-end="url(#arrow)"></path>`;
+              }).join('')}
+            </svg>
+            ${Object.values(workflowNodes).map((node) => `
+              <button class="canvas-node ${node.id === state.selectedNodeId ? 'is-current' : ''} ${nodeIsComplete(node) ? 'is-complete' : 'is-future'} ${isInactiveBranch(node) ? 'is-muted' : ''}" type="button" data-node-id="${node.id}" data-node-type="${node.type}" style="left:${node.x}px;top:${node.y}px" aria-pressed="${node.id === state.selectedNodeId}">
+                <div class="node-kicker">${node.kicker}</div>
+                <div class="node-head"><h3>${node.title}</h3><span class="node-status"></span></div>
+                <p>${node.summary}</p>
+                <div class="node-meta">${node.tags.map((tag) => `<span class="node-tag">${tag}</span>`).join('')}</div>
+              </button>`).join('')}
+          </div>`;
+      }
+
+      function motifSvg(id, transformed = false) {
+        if (id === 'cloud') {
+          return `<svg viewBox="0 0 160 90" role="img" aria-label="祥云纹样"><path d="M18 54c8-18 27-16 33-4 4-22 36-29 46-8 19-13 45 1 40 20H36c-12 0-21-3-18-8Z" fill="none" stroke="#30343B" stroke-width="5" stroke-linecap="round"/><path d="M50 63h65c11 0 18 5 11 13H68" fill="none" stroke="#B8322A" stroke-width="4" stroke-linecap="round"/></svg>`;
+        }
+        if (id === 'river') {
+          return `<svg viewBox="0 0 160 90" role="img" aria-label="黄河水纹"><path d="M5 27c20-18 32 18 51 0s34 18 52 0 31 14 47-1M5 49c20-18 32 18 51 0s34 18 52 0 31 14 47-1M5 70c20-18 32 18 51 0s34 18 52 0 31 14 47-1" fill="none" stroke="#30343B" stroke-width="4" stroke-linecap="round"/></svg>`;
+        }
+        if (transformed) {
+          return `<svg viewBox="0 0 320 100" role="img" aria-label="横向流线龙纹"><path d="M26 55c25-34 58-33 83-10 18 16 31 22 59 10 41-18 74-18 121 9" fill="none" stroke="#B8322A" stroke-width="8" stroke-linecap="round"/><path d="M58 50c-9-23 6-40 29-38l-8 13 19-5-7 15 20 3-18 10c-9-9-23-9-35 2Z" fill="#B8322A"/><circle cx="80" cy="30" r="3" fill="#F5F1E8"/><path d="M111 48c22-9 28 18 48 15 22-4 31-25 55-20 15 3 22 14 32 23" fill="none" stroke="#D4A746" stroke-width="3" stroke-linecap="round"/><path d="M274 60l22-11-8 15 18 5-19 4" fill="none" stroke="#B8322A" stroke-width="6" stroke-linejoin="round"/></svg>`;
+        }
+        return `<svg viewBox="0 0 160 90" role="img" aria-label="传统龙纹"><path d="M38 66c-11-14-9-35 7-46 14-10 34-6 39 9 5 14-8 22-18 15-8-6 0-18 13-15 24 5 17 38 37 42 13 3 21-8 17-18" fill="none" stroke="#30343B" stroke-width="5" stroke-linecap="round"/><path d="M37 29l-17-9 8 17-17 3 20 6M54 20l-2-14 11 11 8-12 1 18" fill="none" stroke="#30343B" stroke-width="4" stroke-linecap="round"/><circle cx="47" cy="29" r="3" fill="#B8322A"/></svg>`;
+      }
+
+      function renderMotifRetrievalContent() {
+        const motifs = [
+          { id: 'dragon', title: '龙纹', note: '权力、腾跃、连续动势' },
+          { id: 'cloud', title: '祥云纹', note: '吉祥、衔接、节奏点缀' },
+          { id: 'river', title: '黄河水纹', note: '地域、流动、水平延展' },
+        ];
+        return `
+          <div class="inspector-section"><h3>图谱检索结果</h3><div class="motif-grid">
+            ${motifs.map((motif) => `
+              <div class="motif-card ${state.motifs.main === motif.id ? 'is-main' : ''} ${state.motifs.secondary.includes(motif.id) ? 'is-secondary' : ''}" data-motif-id="${motif.id}">
+                <div class="motif-preview">${motifSvg(motif.id)}</div>
+                <strong>${motif.title}</strong>
+                <div style="min-height:28px;color:var(--muted);font-size:8px;line-height:1.4">${motif.note}</div>
+                <div class="motif-actions">
+                  <button class="mini-button ${state.motifs.main === motif.id ? 'is-active' : ''}" type="button" data-role="main-motif" data-motif-choice="${motif.id}">设为主纹样</button>
+                  <button class="mini-button ${state.motifs.secondary.includes(motif.id) ? 'is-active' : ''}" type="button" data-role="secondary-motif" data-motif-choice="${motif.id}">辅助纹样</button>
+                </div>
+              </div>`).join('')}
+          </div></div>
+          <div class="inspector-section"><div class="inspector-card"><strong>当前选择</strong><p>主纹样：${state.motifs.main ? motifs.find((item) => item.id === state.motifs.main)?.title : '尚未选择'}<br>辅助纹样：${state.motifs.secondary.map((id) => motifs.find((item) => item.id === id)?.title).filter(Boolean).join('、') || '尚未选择'}</p></div></div>`;
+      }
+
+      function buildMotifPrompt() {
+        const settings = state.motifSettings;
+        return `保留原始龙纹中可识别的龙首轮廓、龙身主要曲线与腾跃姿态；抽象程度 ${settings.abstraction}%，横向延展 ${settings.elongation}%，线条简化 ${settings.simplification}%，重复方式为${settings.repeatMode}。将纵向传统线描转译为适合高速列车修长侧车身的现代流线纹样；保持文化身份可辨，不生成复杂背景、文字、车体结构或写实阴影，输出透明背景装饰纹样。`;
+      }
+
+      function renderMotifTransformContent() {
+        const settings = state.motifSettings;
+        return `
+          <div class="inspector-section"><h3>AI 图像识别</h3><div class="analysis-grid">
+            <div class="analysis-chip"><b>主体</b>侧向龙形与腾跃姿态</div><div class="analysis-chip"><b>轮廓</b>连续弧线与尖锐转折</div>
+            <div class="analysis-chip"><b>构图</b>纵向重心明显</div><div class="analysis-chip"><b>保留特征</b>龙首、龙身曲线、线描身份</div>
+          </div></div>
+          <div class="inspector-section"><h3>转化控制</h3>
+            ${[['abstraction','抽象程度',settings.abstraction],['elongation','横向延展',settings.elongation],['simplification','线条简化',settings.simplification]].map(([id,label,value]) => `
+              <label class="range-control"><span class="range-label"><span>${label}</span><output>${value}%</output></span><input type="range" min="0" max="100" value="${value}" data-control="${id}"></label>`).join('')}
+            <label class="range-control"><span class="range-label"><span>重复方式</span><output>${settings.repeatMode}</output></span><select class="select-control" data-control="repeatMode"><option>非连续单元纹样</option><option>横向连续纹样</option><option>疏密渐变纹样</option></select></label>
+          </div>
+          <div class="inspector-section"><h3>系统组装的提示词</h3><div class="prompt-output" data-output="structured-prompt">${buildMotifPrompt()}</div></div>
+          <div class="inspector-section"><button class="action-button" type="button" data-action="generate-motif">生成转化分支</button></div>`;
+      }
+
+      function renderMotifAssetContent() {
+        return `<div class="inspector-section"><h3>转化前后</h3><div class="compare-panel"><div class="compare-tile"><span>输入 · 传统龙纹</span>${motifSvg('dragon')}</div><div class="compare-tile"><span>输出 · 流线龙纹 v1</span>${motifSvg('dragon', true)}</div></div></div><div class="inspector-section"><div class="inspector-card"><strong>资产说明</strong><p>该版本保留龙首和主要曲线，将纵向构图转为横向低密度纹样，可作为后续布局与生成节点的正式输入。</p></div></div>`;
+      }
+
+      function calculateDensity(layout) {
+        const weights = { windowBand: 22, waistline: 11, door: 16, roofSide: 18, lowerSide: 20, skirt: 16, noseSide: 9 };
+        return Object.entries(layout).reduce((sum, [zone, value]) => sum + (value === 'none' ? 0 : weights[zone]), 0);
+      }
+
+      function trainSvg(options = {}) {
+        const layout = options.layout || state.layout;
+        const colors = options.colors || { body: '#F5F1E8', windowBand: '#B8322A', waistline: '#D4A746', structure: '#30343B', motif: '#D4A746' };
+        const variant = options.variant || 'balanced';
+        const zone = (id) => `train-zone ${layout[id] !== 'none' ? 'is-active' : ''}`;
+        const dragonPath = motifSvg('dragon', true).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+        const cloudPath = motifSvg('cloud').replace(/^<svg[^>]*>|<\/svg>$/g, '');
+        const motifArtwork = variant === 'minimal'
+          ? `<g transform="translate(320 108) scale(.22)" opacity=".78">${dragonPath}</g>`
+          : variant === 'cultural'
+            ? `<g transform="translate(176 102) scale(.42)">${dragonPath}</g><g transform="translate(462 116) scale(.28)">${cloudPath}</g>`
+            : variant === 'refined'
+              ? `<g transform="translate(250 104) scale(.28)">${dragonPath}</g>`
+              : `<g transform="translate(240 104) scale(.35)">${dragonPath}</g>`;
+        return `<svg viewBox="0 0 640 210" role="img" aria-label="CR400BF 高铁侧视涂装预览">
+          <defs><linearGradient id="glass" x1="0" x2="1"><stop stop-color="#223148"/><stop offset="1" stop-color="#52647b"/></linearGradient></defs>
+          <path d="M42 68h420c57 0 100 10 137 47l14 20-15 9H42c-14 0-23-8-23-21V91c0-14 9-23 23-23Z" fill="${colors.body}" stroke="#98a2b3" stroke-width="2"/>
+          <path class="${zone('roofSide')}" data-train-zone="roofSide" d="M49 70h408c47 0 84 7 113 29H49Z" fill="${colors.waistline}"/>
+          <path class="${zone('windowBand')}" data-train-zone="windowBand" d="M46 90h403c49 0 87 8 117 28H46Z" fill="${colors.windowBand}"/>
+          <path d="M58 94h48v18H58Zm62 0h48v18h-48Zm62 0h48v18h-48Zm62 0h48v18h-48Zm62 0h48v18h-48Zm62 0h48v18h-48Zm62 0h31c29 1 58 5 82 15h-113Z" fill="url(#glass)"/>
+          <path class="${zone('door')}" data-train-zone="door" d="M167 88h35v54h-35Zm193 0h35v54h-35Z" fill="${colors.structure}"/>
+          <path class="${zone('waistline')}" data-train-zone="waistline" d="M43 122h462c34 0 63 4 88 13l-5 7H43Z" fill="${colors.waistline}"/>
+          <path class="${zone('lowerSide')}" data-train-zone="lowerSide" d="M42 133h545l-10 12H42Z" fill="${colors.windowBand}" opacity=".8"/>
+          <path class="${zone('skirt')}" data-train-zone="skirt" d="M62 145h481l-18 14H78Z" fill="${colors.structure}"/>
+          <path class="${zone('noseSide')}" data-train-zone="noseSide" d="M488 113c41 0 77 7 110 24l-12 7h-91Z" fill="${colors.waistline}"/>
+          <path d="M458 91c37 1 64 7 85 17l-65 1Z" fill="#26384d"/>
+          <g fill="#30343B"><circle cx="122" cy="157" r="11"/><circle cx="150" cy="157" r="11"/><circle cx="449" cy="157" r="11"/><circle cx="477" cy="157" r="11"/></g>
+          <g stroke="#697586" stroke-width="3"><path d="M97 157h78M424 157h78"/></g>
+          ${state.generatedMotif && layout.windowBand !== 'none' ? motifArtwork : ''}
+        </svg>`;
+      }
+
+      function renderLayoutContent() {
+        const labels = { windowBand: '车窗带', waistline: '腰线', door: '车门', roofSide: '车顶侧', lowerSide: '车底侧', skirt: '裙板', noseSide: '车头侧' };
+        const options = {
+          windowBand: ['none', 'A1', 'A2', 'A3'], waistline: ['none', 'B1', 'B2', 'B3', 'B4'],
+          door: ['none', 'C1'], roofSide: ['none', 'D1', 'D2'], lowerSide: ['none', 'E1'],
+          skirt: ['none', 'F1', 'F2', 'F3'], noseSide: ['none', 'G1', 'G2', 'G3', 'G4'],
+        };
+        const density = calculateDensity(state.layout);
+        const activeOptions = options[state.activeLayoutZone];
+        return `
+          <div class="inspector-section"><h3>车体实时预览</h3><div class="train-preview">${trainSvg()}</div></div>
+          <div class="inspector-section"><div class="recommendation-card"><strong>AI 稀疏布局建议</strong><p>选择 1 个主区域与 2 个辅助区域，避免每个区域都施色。推荐车窗带 A3、腰线 B2、车头侧 G2，其余留白。</p><button class="action-button" type="button" data-action="apply-layout-recommendation">采用 AI 推荐</button></div></div>
+          <div class="inspector-section"><h3>区域开关与布局形式</h3><div class="layout-zone-list">
+            ${Object.entries(labels).map(([id, label]) => `<button class="layout-zone-button ${state.activeLayoutZone === id ? 'is-current' : ''}" type="button" data-layout-zone="${id}"><span>${label}</span><strong>${state.layout[id] === 'none' ? '不使用' : state.layout[id]}</strong></button>`).join('')}
+          </div><div class="layout-options">${activeOptions.map((value) => `<button class="layout-option ${state.layout[state.activeLayoutZone] === value ? 'is-active' : ''}" type="button" data-layout-option="${value}">${value === 'none' ? '不使用' : value}</button>`).join('')}</div></div>
+          <div class="inspector-section"><div class="density-card ${density > 60 ? 'is-warning' : ''}"><div class="density-head"><strong>视觉密度预算</strong><output data-output="density-budget">${density}%</output></div><div class="density-bar"><span style="width:${Math.min(density, 100)}%"></span></div><p style="margin:7px 0 0;color:var(--muted);font-size:9px">${density > 60 ? '装饰区域偏多，建议减少一个主色块。' : '当前密度处于疏朗范围，窗门结构可辨。'}</p></div></div>`;
+      }
+
+      function renderColorContent() {
+        const palette = [
+          { value: '#B8322A', label: '中国红' },
+          { value: '#D4A746', label: '琉璃金' },
+          { value: '#F5F1E8', label: '暖白' },
+          { value: '#30343B', label: '墨灰' },
+        ];
+        const regionLabels = { body: '车身主色', windowBand: '车窗带', waistline: '腰线与点缀', motif: '纹样', structure: '结构与标识' };
+        const previewLayout = calculateDensity(state.layout) === 0
+          ? { windowBand: 'A3', waistline: 'B2', door: 'none', roofSide: 'none', lowerSide: 'none', skirt: 'none', noseSide: 'G2' }
+          : state.layout;
+        return `
+          <div class="inspector-section"><h3>中国文化情绪板</h3><div class="moodboard" aria-label="预设中国文化情绪板"><div class="moodboard-main"></div><div class="moodboard-stack"><div></div><div></div></div></div><button class="action-button ${state.paletteExtracted ? 'secondary' : ''}" style="margin-top:8px" type="button" data-action="extract-palette">${state.paletteExtracted ? '已提取 4 个颜色' : '模拟提取色板'}</button></div>
+          ${state.paletteExtracted ? `<div class="inspector-section"><h3>提取色板 · 点击分配给当前区域</h3><div class="palette-row">${palette.map((color) => `<button class="palette-swatch ${Object.values(state.colors).includes(color.value) ? 'is-used' : ''}" type="button" data-palette-color="${color.value}"><span class="swatch-color" style="background:${color.value}"></span><span class="swatch-label">${color.label}<br>${color.value}</span></button>`).join('')}</div></div>` : ''}
+          <div class="inspector-section"><h3>区域配色</h3><div class="color-region-list">${Object.entries(regionLabels).map(([id, label]) => `<button class="color-region-button ${state.activeColorRegion === id ? 'is-current' : ''}" type="button" data-color-region="${id}"><span class="color-dot" style="background:${state.colors[id]}"></span><span>${label}</span><strong>${state.colors[id]}</strong></button>`).join('')}</div></div>
+          <div class="inspector-section"><h3>车体配色预览</h3><div class="train-preview">${trainSvg({ layout: previewLayout, colors: state.colors })}</div><div class="color-ratio" title="主辅色面积比例"><span></span><span></span><span></span><span></span></div><p style="margin:6px 0 0;color:var(--muted);font-size:9px">建议比例：暖白 62% · 中国红 24% · 琉璃金 9% · 墨灰 5%</p></div>`;
+      }
+
+      function renderCaseContent() {
+        const cases = [
+          { id: 'cr400bf-redline', title: 'CR400BF · 红色窗带', note: '车型一致，窗带线条与车头收束比例相近', colors: { body: '#f7f5ef', windowBand: '#b8322a', waistline: '#30343b', structure: '#30343b', motif: '#d4a746' } },
+          { id: 'cr400af-gold', title: 'CR400AF · 金色腰线', note: '参考细腰线比例与品牌标识留白', colors: { body: '#f8f8f4', windowBand: '#30343b', waistline: '#d4a746', structure: '#30343b', motif: '#d4a746' } },
+          { id: 'crh-modern', title: 'CRH · 极简侧视涂装', note: '参考大面积留白与窗口节奏', colors: { body: '#f5f7f9', windowBand: '#315a8c', waistline: '#d6dee8', structure: '#30343b', motif: '#315a8c' } },
+        ];
+        const previewLayout = { windowBand: 'A3', waistline: 'B2', door: 'none', roofSide: 'none', lowerSide: 'none', skirt: 'none', noseSide: 'G2' };
+        return `<div class="inspector-section"><h3>相似案例 · 可选输入</h3><div class="case-list">${cases.map((item) => `<button class="case-card ${state.selectedCaseId === item.id ? 'is-selected' : ''}" type="button" data-case-id="${item.id}"><span class="case-thumb">${trainSvg({ layout: previewLayout, colors: item.colors })}</span><span class="case-copy"><strong>${item.title}</strong><span>${item.note}</span></span></button>`).join('')}</div></div>
+          <div class="inspector-section"><h3>明确参考范围</h3><textarea class="text-control" data-control="case-note" placeholder="例如：仅参考 CR 标识在车窗带上的相对位置，不复刻车型文字。">${state.caseNote}</textarea><p style="margin:6px 0 0;color:var(--muted);font-size:9px">案例图片只提供位置、比例与设计语言参考，不作为整图复制模板。</p></div>
+          ${state.selectedCaseId ? `<div class="inspector-section"><button class="action-button secondary" type="button" data-action="remove-case">取消案例输入</button></div>` : ''}`;
+      }
+
+      function packageReadiness() {
+        return {
+          template: true,
+          motif: state.generatedMotif,
+          layout: calculateDensity(state.layout) > 0,
+          color: state.paletteExtracted,
+          case: Boolean(state.selectedCaseId),
+        };
+      }
+
+      function isPackageReady() {
+        const readiness = packageReadiness();
+        return readiness.template && readiness.motif && readiness.layout && readiness.color;
+      }
+
+      function renderPackageContent() {
+        const readiness = packageReadiness();
+        const ports = [
+          { id: 'template', icon: '车', label: '车型白模', detail: 'CR400BF 严格侧视结构', optional: false },
+          { id: 'motif', icon: '纹', label: '转化纹样', detail: state.generatedMotif ? '流线龙纹 v1' : '尚未生成转化资产', optional: false },
+          { id: 'layout', icon: '布', label: '布局方案', detail: readiness.layout ? `A3 / B2 / G2 · 密度 ${calculateDensity(state.layout)}%` : '尚未配置有效区域', optional: false },
+          { id: 'color', icon: '色', label: '色彩方案', detail: state.paletteExtracted ? '朱红琉璃配色 v1' : '尚未提取或确认色板', optional: false },
+          { id: 'case', icon: '例', label: '案例参考（可选）', detail: state.selectedCaseId ? 'CR400BF · 红色窗带' : '未选择，不阻断生成', optional: true },
+        ];
+        const ready = isPackageReady();
+        return `<div class="inspector-section"><h3>多输入设计包</h3><div class="package-list">${ports.map((port) => `<div class="package-port ${readiness[port.id] ? 'is-ready' : ''}" data-package-input="${port.id}"><span class="port-icon">${port.icon}</span><span class="port-copy"><strong>${port.label}</strong><span>${port.detail}</span></span><span class="port-status">${readiness[port.id] ? '已就绪' : port.optional ? '可选' : '缺少'}</span></div>`).join('')}</div></div>
+          <div class="inspector-section"><div class="package-status ${ready ? 'is-ready' : ''}" data-output="package-status">${ready ? '4 项必需输入已就绪，可以生成候选方案。' : '设计包尚不完整，请补充纹样、布局或色彩输入。案例参考始终为可选项。'}</div></div>
+          <div class="inspector-section"><h3>自动合成提示词摘要</h3><div class="prompt-output">生成 CR400BF 高铁严格侧视涂装效果；保持车窗、车门和车头结构；应用流线龙纹、疏朗 A3/B2/G2 布局与朱红琉璃配色；案例仅参考相对位置和比例，不绘制内部编号与无关文字。</div></div>
+          <div class="inspector-section"><button class="action-button" type="button" data-action="generate-candidates" ${ready ? '' : 'disabled'}>生成 3 个候选分支</button></div>`;
+      }
+
+      const evaluationLabels = {
+        culturalFit: '文化契合度',
+        bodyFit: '车体适配度',
+        hierarchy: '视觉层级',
+        motion: '动态识别性',
+        innovation: '创新性',
+        control: '用户控制度',
+      };
+
+      function candidateDefinitions() {
+        const baseLayout = { windowBand: 'A3', waistline: 'B2', door: 'none', roofSide: 'none', lowerSide: 'none', skirt: 'none', noseSide: 'G2' };
+        return [
+          {
+            id: 'proposal-a', short: 'A', title: '方案 A · 平衡型', variant: 'balanced',
+            note: '龙纹、朱红窗带与金色腰线均衡，兼顾文化识别和车体留白。',
+            layout: state.layout.windowBand === 'none' ? baseLayout : state.layout,
+            colors: state.colors,
+            metrics: { culturalFit: 90, bodyFit: 86, hierarchy: 82, motion: 78, innovation: 84, control: 91 },
+          },
+          {
+            id: 'proposal-b', short: 'B', title: '方案 B · 极简型', variant: 'minimal',
+            note: '缩小龙纹并取消金色腰线，突出车身留白和车型结构。',
+            layout: { ...baseLayout, waistline: 'none', noseSide: 'none' },
+            colors: { ...state.colors, windowBand: '#30343B', waistline: '#B8322A' },
+            metrics: { culturalFit: 76, bodyFit: 94, hierarchy: 88, motion: 80, innovation: 74, control: 93 },
+          },
+          {
+            id: 'proposal-c', short: 'C', title: '方案 C · 文化强化', variant: 'cultural',
+            note: '放大龙纹并加入祥云点缀，增强文化显著性和高速动态感。',
+            layout: { ...baseLayout, roofSide: 'D2' },
+            colors: { ...state.colors, windowBand: '#B8322A', waistline: '#D4A746' },
+            metrics: { culturalFit: 96, bodyFit: 78, hierarchy: 74, motion: 88, innovation: 90, control: 82 },
+          },
+        ];
+      }
+
+      function candidateById(candidateId) {
+        return candidateDefinitions().find((candidate) => candidate.id === candidateId) || candidateDefinitions()[0];
+      }
+
+      function metricsMarkup(metrics) {
+        return `<div class="metric-list">${Object.entries(evaluationLabels).map(([id, label]) => `<div class="metric-row"><span>${label}</span><span class="metric-track"><span style="width:${metrics[id]}%"></span></span><strong>${metrics[id]}</strong></div>`).join('')}</div>`;
+      }
+
+      function candidateTrain(candidate, refined = false) {
+        return trainSvg({ layout: candidate.layout, colors: candidate.colors, variant: refined ? 'refined' : candidate.variant });
+      }
+
+      function renderCandidateStrip() {
+        return `<div class="candidate-strip">${candidateDefinitions().map((candidate) => `<button class="candidate-card ${state.selectedCandidateId === candidate.id ? 'is-selected' : ''}" type="button" data-candidate-id="${candidate.id}">${candidateTrain(candidate)}<strong>${candidate.title}</strong><span>综合差异方向 ${candidate.short}</span></button>`).join('')}</div>`;
+      }
+
+      function renderCandidateContent(nodeId) {
+        if (!state.candidatesGenerated) {
+          return `<div class="inspector-section"><div class="package-status">候选分支尚未生成。请先在结构化设计包节点确认四项必需输入。</div></div>`;
+        }
+        const candidate = candidateById(nodeId);
+        const selected = state.selectedCandidateId === candidate.id;
+        return `<div class="inspector-section"><h3>候选方案总览</h3>${renderCandidateStrip()}</div>
+          <div class="inspector-section"><h3>${candidate.title} · 侧视预览</h3><div class="train-preview">${candidateTrain(candidate)}</div><p style="margin:7px 0 0;color:var(--muted);font-size:9px;line-height:1.55">${candidate.note}</p></div>
+          <div class="inspector-section"><h3>六维快速评价</h3>${metricsMarkup(candidate.metrics)}</div>
+          <div class="inspector-section"><div class="action-row"><button class="action-button ${selected ? 'secondary' : ''}" type="button" data-action="select-candidate">${selected ? '已选为深化对象' : '选择此方案'}</button><button class="action-button secondary" type="button" data-action="open-comparison">三方案对比</button></div></div>
+          ${selected ? `<div class="inspector-section"><button class="action-button" type="button" data-action="evaluate-selected">进入 AI 辅助评价</button></div>` : ''}`;
+      }
+
+      function renderSuggestionContent() {
+        const candidate = candidateById('proposal-a');
+        return `<div class="inspector-section"><h3>评价证据</h3><div class="decision-card"><strong>局部视觉密度提醒</strong><p>车门附近同时叠加窗带、龙身曲线与腰线，远距离识别时形成局部拥挤。建议只将门区纹样密度降低 18%，其余参数保持不变。</p></div></div>
+          <div class="inspector-section"><h3>采用前后模拟</h3><div class="compare-panel"><div class="compare-tile"><span>方案 A · 原版本保留</span>${candidateTrain(candidate)}</div><div class="compare-tile"><span>建议结果 · 门区减密</span>${candidateTrain(candidate, true)}</div></div></div>
+          <div class="inspector-section"><div class="action-row"><button class="action-button" type="button" data-action="accept-ai-suggestion">采用并新建 A-1</button><button class="action-button secondary" type="button" data-action="dismiss-ai-suggestion">忽略建议</button></div></div>`;
+      }
+
+      function renderRefinedContent() {
+        const candidate = candidateById('proposal-a');
+        return `<div class="inspector-section"><div class="version-lineage" data-output="version-lineage">方案 A → 方案 A-1 · 门区纹样密度 −18%</div></div>
+          <div class="inspector-section"><h3>优化结果</h3><div class="train-preview">${candidateTrain(candidate, true)}</div></div>
+          <div class="inspector-section"><div class="inspector-card"><strong>人工确认记录</strong><p>接受 AI 的局部密度提醒；保留方案 A 原版本；只修改门区纹样尺度与间距，色彩、主布局和车型约束均不变。</p></div></div>
+          <div class="inspector-section"><button class="action-button" type="button" data-action="archive-version">确认为最终方案并归档</button></div>`;
+      }
+
+      function renderArchiveContent() {
+        if (!state.archivedVersion) {
+          return `<div class="inspector-section"><div class="package-status">尚未确认最终版本。请先完成人工评价与局部优化。</div></div>`;
+        }
+        return `<div class="inspector-section"><div class="package-status is-ready" data-output="archive-summary">方案 A-1 已归档；同时保存效果图、结构化设计包、生成提示词、评价理由与完整演化路径。</div></div>
+          <div class="inspector-section"><h3>可复现研究档案</h3><div class="archive-grid">
+            <div class="archive-item"><strong>最终效果图</strong><span>CR400BF 侧视 · A-1</span></div><div class="archive-item"><strong>设计包</strong><span>车型、纹样、布局、色彩、案例</span></div>
+            <div class="archive-item"><strong>提示词与参数</strong><span>纹样转化与方案生成上下文</span></div><div class="archive-item"><strong>演化路径</strong><span>A / B / C → A → A-1</span></div>
+            <div class="archive-item"><strong>决策记录</strong><span>选择、评价、采用与忽略操作</span></div><div class="archive-item"><strong>设计规范</strong><span>颜色、区域、密度和资产版本</span></div>
+          </div></div>`;
+      }
+
+      function renderComparisonModal() {
+        const layer = document.querySelector('[data-region="comparison-layer"]');
+        if (!state.comparisonOpen) {
+          layer.innerHTML = '';
+          return;
+        }
+        layer.innerHTML = `<div class="modal-backdrop"><section class="comparison-modal" data-region="comparison-modal" role="dialog" aria-modal="true" aria-labelledby="comparison-title">
+          <div class="modal-head"><div><h2 id="comparison-title">候选方案横向对比</h2><p>同一设计包下改变视觉策略，数值用于支持判断，不替代设计师决策。</p></div><button class="icon-button" type="button" data-action="close-comparison" aria-label="关闭对比">×</button></div>
+          <div class="comparison-grid">${candidateDefinitions().map((candidate) => `<article class="comparison-column ${state.selectedCandidateId === candidate.id ? 'is-selected' : ''}" data-comparison-candidate="${candidate.id}"><div class="train-preview">${candidateTrain(candidate)}</div><h3>${candidate.title}</h3><p>${candidate.note}</p>${metricsMarkup(candidate.metrics)}<button class="action-button ${state.selectedCandidateId === candidate.id ? 'secondary' : ''}" type="button" data-choose-comparison="${candidate.id}">${state.selectedCandidateId === candidate.id ? '当前深化对象' : '选择此方案'}</button></article>`).join('')}</div>
+        </section></div>`;
+      }
+
+      function renderInspector() {
+        const node = selectedNode();
+        const sourceClass = node.source === 'human' ? 'human' : node.source === 'knowledge' ? 'knowledge' : 'ai';
+        const region = document.querySelector('[data-region="inspector"]');
+        const specialContent = node.id === 'motif-retrieval'
+          ? renderMotifRetrievalContent()
+          : node.id === 'motif-transform'
+            ? renderMotifTransformContent()
+            : node.id === 'motif-v1'
+              ? renderMotifAssetContent()
+              : node.id === 'layout-v1'
+                ? renderLayoutContent()
+                : node.id === 'color-v1'
+                  ? renderColorContent()
+                  : node.id === 'case-ref'
+                    ? renderCaseContent()
+                    : node.id === 'design-package'
+                      ? renderPackageContent()
+                      : ['proposal-a', 'proposal-b', 'proposal-c'].includes(node.id)
+                        ? renderCandidateContent(node.id)
+                        : node.id === 'ai-suggestion'
+                          ? renderSuggestionContent()
+                          : node.id === 'proposal-a1'
+                            ? renderRefinedContent()
+                            : node.id === 'archive'
+                              ? renderArchiveContent()
+                      : '';
+        region.innerHTML = `
+          <div class="inspector-heading">
+            <div><div class="inspector-kicker">${node.kicker}</div><h2>${node.title}</h2><p>步骤 ${node.step} · ${stages[stageIndexForNode(node.id)]?.label || ''}</p></div>
+            <span class="source-pill ${sourceClass}">${sourceLabel[node.source]}</span>
+          </div>
+          <div class="inspector-section">
+            <div class="inspector-card"><strong>节点说明</strong><p>${node.summary}</p></div>
+          </div>
+          ${specialContent || `<div class="inspector-section">
+            <h3>结构化信息</h3>
+            <div class="detail-list">${node.details.map(([label, value]) => `<div class="detail-row"><span>${label}</span><strong>${value}</strong></div>`).join('')}</div>
+          </div>`}
+          <div class="inspector-section">
+            <h3>版本与来源</h3>
+            <div class="inspector-card"><p>节点 ID：${node.id}<br>操作主体：${sourceLabel[node.source]}<br>历史版本不会被后续操作覆盖。</p></div>
+          </div>`;
+      }
+
+      function renderTimeline() {
+        const region = document.querySelector('[data-region="demo-timeline"]');
+        region.innerHTML = `
+          <button class="timeline-button" type="button" data-action="previous-step" ${state.demoStep === 0 ? 'disabled' : ''}>上一步</button>
+          <span>案例演示 ${state.demoStep} / 10</span>
+          <div class="timeline-progress"><span style="width:${state.demoStep * 10}%"></span></div>
+          <button class="timeline-button primary" type="button" data-action="next-step" ${state.demoStep === 10 ? 'disabled' : ''}>下一步案例演示</button>`;
+      }
+
+      function renderAll() {
+        document.body.classList.toggle('show-all-branches', state.showAllBranches);
+        document.body.classList.toggle('workspace-view', state.view === 'workspace');
+        renderStageNav();
+        renderCanvas();
+        renderInspector();
+        renderTimeline();
+        renderComparisonModal();
+      }
+
+      document.addEventListener('click', (event) => {
+        const target = event.target.closest('button');
+        if (!target) return;
+        if (target.dataset.nodeId) selectNode(target.dataset.nodeId);
+        if (target.dataset.stage) selectStage(target.dataset.stage);
+        if (target.dataset.action === 'next-step') setDemoStep(state.demoStep + 1);
+        if (target.dataset.action === 'previous-step') setDemoStep(state.demoStep - 1);
+        if (target.dataset.action === 'toggle-branches') toggleBranches();
+        if (target.dataset.action === 'reset-demo') resetDemo();
+        if (target.dataset.role === 'main-motif') {
+          state.motifs.main = target.dataset.motifChoice;
+          state.motifs.secondary = state.motifs.secondary.filter((id) => id !== target.dataset.motifChoice);
+          renderInspector();
+        }
+        if (target.dataset.role === 'secondary-motif') {
+          const motifId = target.dataset.motifChoice;
+          state.motifs.secondary = state.motifs.secondary.includes(motifId)
+            ? state.motifs.secondary.filter((id) => id !== motifId)
+            : [...state.motifs.secondary, motifId];
+          if (state.motifs.main === motifId) state.motifs.main = null;
+          renderInspector();
+        }
+        if (target.dataset.action === 'generate-motif') {
+          state.generatedMotif = true;
+          state.demoStep = Math.max(state.demoStep, 3);
+          state.selectedNodeId = 'motif-v1';
+          renderAll();
+        }
+        if (target.dataset.action === 'apply-layout-recommendation') {
+          state.layout = { windowBand: 'A3', waistline: 'B2', door: 'none', roofSide: 'none', lowerSide: 'none', skirt: 'none', noseSide: 'G2' };
+          renderInspector();
+        }
+        if (target.dataset.layoutZone) {
+          state.activeLayoutZone = target.dataset.layoutZone;
+          renderInspector();
+        }
+        if (target.dataset.layoutOption) {
+          state.layout[state.activeLayoutZone] = target.dataset.layoutOption;
+          renderInspector();
+        }
+        if (target.dataset.action === 'extract-palette') {
+          state.paletteExtracted = true;
+          renderInspector();
+        }
+        if (target.dataset.colorRegion) {
+          state.activeColorRegion = target.dataset.colorRegion;
+          renderInspector();
+        }
+        if (target.dataset.paletteColor) {
+          state.colors[state.activeColorRegion] = target.dataset.paletteColor;
+          renderInspector();
+        }
+        if (target.dataset.caseId) {
+          state.selectedCaseId = target.dataset.caseId;
+          renderInspector();
+        }
+        if (target.dataset.action === 'remove-case') {
+          state.selectedCaseId = null;
+          state.caseNote = '';
+          renderInspector();
+        }
+        if (target.dataset.action === 'generate-candidates' && isPackageReady()) {
+          state.candidatesGenerated = true;
+          state.selectedCandidateId = 'proposal-a';
+          state.selectedNodeId = 'proposal-a';
+          state.demoStep = Math.max(state.demoStep, 8);
+          renderAll();
+        }
+        if (target.dataset.candidateId) {
+          state.selectedCandidateId = target.dataset.candidateId;
+          state.selectedNodeId = target.dataset.candidateId;
+          renderAll();
+        }
+        if (target.dataset.action === 'select-candidate') {
+          state.selectedCandidateId = ['proposal-a', 'proposal-b', 'proposal-c'].includes(state.selectedNodeId) ? state.selectedNodeId : 'proposal-a';
+          renderAll();
+        }
+        if (target.dataset.action === 'open-comparison') {
+          state.comparisonOpen = true;
+          renderComparisonModal();
+        }
+        if (target.dataset.action === 'close-comparison') {
+          state.comparisonOpen = false;
+          renderComparisonModal();
+        }
+        if (target.dataset.chooseComparison) {
+          state.selectedCandidateId = target.dataset.chooseComparison;
+          state.selectedNodeId = target.dataset.chooseComparison;
+          state.comparisonOpen = false;
+          renderAll();
+        }
+        if (target.dataset.action === 'evaluate-selected') {
+          state.evaluationReady = true;
+          state.selectedNodeId = 'ai-suggestion';
+          state.demoStep = Math.max(state.demoStep, 9);
+          renderAll();
+        }
+        if (target.dataset.action === 'accept-ai-suggestion') {
+          state.refinedVersionCreated = true;
+          state.selectedCandidateId = 'proposal-a1';
+          state.selectedNodeId = 'proposal-a1';
+          state.demoStep = Math.max(state.demoStep, 9);
+          renderAll();
+        }
+        if (target.dataset.action === 'dismiss-ai-suggestion') {
+          state.selectedCandidateId = 'proposal-a';
+          state.selectedNodeId = 'proposal-a';
+          renderAll();
+        }
+        if (target.dataset.action === 'archive-version') {
+          state.archivedVersion = 'proposal-a1';
+          state.selectedNodeId = 'archive';
+          state.demoStep = 10;
+          renderAll();
+        }
+        if (target.dataset.action === 'set-view') {
+          state.view = target.dataset.view;
+          document.body.classList.toggle('workspace-view', state.view === 'workspace');
+          document.querySelectorAll('[data-action="set-view"]').forEach((button) => button.classList.toggle('is-active', button.dataset.view === state.view));
+        }
+      });
+
+      document.addEventListener('input', (event) => {
+        const target = event.target;
+        if (!target?.dataset?.control) return;
+        const control = target.dataset.control;
+        if (control === 'case-note') {
+          state.caseNote = target.value;
+          return;
+        }
+        if (['abstraction', 'elongation', 'simplification'].includes(control)) {
+          state.motifSettings[control] = Number(target.value);
+          renderInspector();
+        }
+        if (control === 'repeatMode') {
+          state.motifSettings.repeatMode = target.value;
+          renderInspector();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && state.comparisonOpen) {
+          state.comparisonOpen = false;
+          renderComparisonModal();
+          document.querySelector('[data-action="open-comparison"]')?.focus();
+        }
+      });
+
+      window.prototypeApi = {
+        getState: () => clone(state),
+        reset: resetDemo,
+      };
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
