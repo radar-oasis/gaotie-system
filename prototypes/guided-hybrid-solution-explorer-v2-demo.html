@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>高铁涂装人机共创｜引导式混合方案探索器 V2</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f9;
+      --panel: #ffffff;
+      --line: #e1e6ee;
+      --text: #172033;
+      --muted: #667085;
+      --primary: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --human: #d9632f;
+      --ai: #2563eb;
+      --asset: #7c3aed;
+      --layout: #e67e22;
+      --palette: #17915d;
+      --shadow: 0 12px 34px rgba(30, 41, 59, .09);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; overflow: hidden; background: var(--bg); color: var(--text); font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .46; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid rgba(37, 99, 235, .28); outline-offset: 2px; }
+
+    .app { display: grid; grid-template-rows: 62px 74px minmax(0, 1fr); height: 100%; min-width: 960px; }
+    .topbar { display: flex; align-items: center; gap: 12px; padding: 0 22px; border-bottom: 1px solid var(--line); background: #fff; }
+    .brand { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: #182337; color: #fff; font-weight: 800; }
+    .brand-copy strong { display: block; font-size: 14px; }
+    .brand-copy span { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .topbar-spacer { flex: 1; }
+    .context-pill { padding: 6px 10px; border-radius: 999px; background: #f6f8fb; color: #475467; font-size: 10px; font-weight: 700; }
+    .top-action { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: #475467; font-size: 11px; font-weight: 700; }
+
+    .stagebar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.96); }
+    .stage-tab { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 8px; min-width: 0; padding: 7px 9px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: #667085; text-align: left; }
+    .stage-tab.is-active { border-color: #bfd4fc; background: var(--primary-soft); color: #1d4ed8; }
+    .stage-index { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 8px; background: #eef2f7; font-size: 10px; font-weight: 800; }
+    .stage-tab.is-active .stage-index { background: var(--primary); color: #fff; }
+    .stage-copy { min-width: 0; }
+    .stage-copy strong { display: block; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .stage-copy span { display: block; margin-top: 2px; overflow: hidden; color: #98a2b3; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+
+    .workspace { min-height: 0; overflow: hidden; }
+    .demand-view { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(320px, .8fr); height: 100%; }
+    .chat-panel { display: grid; grid-template-rows: 68px minmax(0, 1fr) auto; min-width: 0; border-right: 1px solid var(--line); background: #fbfcfe; }
+    .module-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 24px; border-bottom: 1px solid var(--line); background: #fff; }
+    .module-header h1 { margin: 0; font-size: 17px; }
+    .module-header p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .module-badge { padding: 5px 8px; border-radius: 999px; background: #edf4ff; color: #1d4ed8; font-size: 9px; font-weight: 750; }
+    .chat-stream { overflow: auto; padding: 26px clamp(28px, 7vw, 90px); }
+    .message { display: flex; gap: 10px; max-width: 720px; margin-bottom: 20px; }
+    .message.user { margin-left: auto; flex-direction: row-reverse; }
+    .avatar { flex: 0 0 30px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: #182337; color: #fff; font-size: 10px; font-weight: 800; }
+    .message.user .avatar { background: #d9632f; }
+    .bubble { padding: 13px 15px; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 3px 12px rgba(30,41,59,.04); font-size: 12px; line-height: 1.75; }
+    .message.user .bubble { border-color: #f3cdbd; background: #fff6f1; }
+    .chat-input { display: flex; gap: 9px; margin: 0 clamp(28px, 7vw, 90px) 24px; padding: 9px; border: 1px solid #ccd5e3; border-radius: 13px; background: #fff; box-shadow: var(--shadow); }
+    .chat-input input { flex: 1; min-width: 0; border: 0; outline: 0; color: #344054; font-size: 11px; }
+    .primary-button { min-height: 38px; padding: 0 15px; border: 1px solid var(--primary); border-radius: 9px; background: var(--primary); color: #fff; font-size: 11px; font-weight: 750; }
+    .secondary-button { min-height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: #475467; font-size: 10px; font-weight: 700; }
+
+    .intent-panel { display: grid; grid-template-rows: 68px minmax(0, 1fr) auto; min-width: 0; background: #fff; }
+    .intent-content { overflow: auto; padding: 20px; }
+    .summary-card { padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: #f8fafc; }
+    .summary-card strong { display: block; margin-bottom: 7px; font-size: 12px; }
+    .summary-card p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.7; }
+    .section-title { margin: 20px 0 10px; font-size: 11px; }
+    .intent-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .intent-chip { min-height: 34px; padding: 0 11px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #475467; font-size: 10px; }
+    .intent-chip.is-selected { border-color: #e99b78; background: #fff4ed; color: #b54708; }
+    .intent-footer { padding: 16px 20px; border-top: 1px solid var(--line); background: #fff; }
+    .intent-footer .primary-button { width: 100%; }
+    .placeholder-view { height: 100%; display: grid; place-items: center; color: var(--muted); }
+
+    @media (max-width: 1100px) {
+      body { overflow: auto; }
+      .app { min-height: 760px; }
+      .stage-copy span { display: none; }
+      .demand-view { grid-template-columns: minmax(560px, 1fr) 330px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" data-app="hybrid-explorer-v2">
+    <header class="topbar">
+      <div class="brand">轨</div>
+      <div class="brand-copy"><strong>文化主题高铁涂装共创系统</strong><span>引导式混合方案探索器 · V2 演示</span></div>
+      <div class="topbar-spacer"></div>
+      <span class="context-pill">CR400BF · 中国传统文化</span>
+      <button class="top-action" type="button" data-action="open-archive">过程档案</button>
+      <button class="top-action" type="button" data-action="reset-demo">重置演示</button>
+    </header>
+    <nav class="stagebar" data-region="stage-nav" aria-label="设计流程阶段"></nav>
+    <main class="workspace" data-region="main-workspace" aria-label="高铁涂装人机共创工作区"></main>
+  </div>
+  <div data-region="modal-layer"></div>
+
+  <script>
+    (() => {
+      const INITIAL_STATE = {
+        activeStage: 'demand',
+        demandConfirmed: false,
+        intentions: ['龙纹', '祥云', '宫墙'],
+        recommendationRound: 1,
+        preferredStyles: [],
+        reducedStyles: [],
+        selectedPatternIds: [],
+        generatedVariants: [],
+        selectedVariantId: null,
+        motifPlacement: { x: 54, y: 46, scale: 1 },
+        captures: [],
+        explorerNodes: [],
+        explorerEdges: [],
+        selectedNodeId: null,
+        selectedEdgeId: null,
+        pendingConnection: null,
+        layoutAssets: [],
+        paletteAssets: [],
+        proposals: [],
+        selectedProposalIds: [],
+        selectedSceneIds: [],
+        highFidelityOutputs: [],
+        archiveOpen: false,
+      };
+      const clone = (value) => JSON.parse(JSON.stringify(value));
+      let state = clone(INITIAL_STATE);
+
+      const stages = [
+        { id: 'demand', label: '需求分析', hint: '对话与文化意向' },
+        { id: 'recommend', label: '纹样推荐', hint: '多风格与偏好反馈' },
+        { id: 'transform', label: '纹样转化', hint: '视觉画布与截图' },
+        { id: 'compose', label: '方案编排', hint: '节点组合与分支' },
+        { id: 'select', label: '方案筛选', hint: 'AI 建议与人工选择' },
+        { id: 'fidelity', label: '高保真输出', hint: '场景深化与归档' },
+      ];
+
+      function canOpenStage(stageId) {
+        if (stageId === 'demand') return true;
+        if (stageId === 'recommend') return state.demandConfirmed;
+        if (stageId === 'transform') return state.selectedPatternIds.length > 0;
+        if (stageId === 'compose') return state.captures.length > 0;
+        if (stageId === 'select') return state.proposals.length > 0;
+        if (stageId === 'fidelity') return state.selectedProposalIds.length > 0;
+        return false;
+      }
+
+      function renderStageNav() {
+        const region = document.querySelector('[data-region="stage-nav"]');
+        region.innerHTML = stages.map((stage, index) => `
+          <button class="stage-tab ${state.activeStage === stage.id ? 'is-active' : ''}" type="button" data-stage data-stage-id="${stage.id}" ${canOpenStage(stage.id) ? '' : 'disabled'} ${state.activeStage === stage.id ? 'aria-current="step"' : ''}>
+            <span class="stage-index">${index + 1}</span><span class="stage-copy"><strong>${stage.label}</strong><span>${stage.hint}</span></span>
+          </button>`).join('');
+      }
+
+      function renderDemand() {
+        const intentionOptions = ['龙纹', '祥云', '宫墙', '青花', '山水', '速度感'];
+        return `<section class="demand-view" data-view="demand">
+          <div class="chat-panel">
+            <header class="module-header"><div><h1>需求分析与文化主题发散</h1><p>通过对话把宽泛主题收敛为可用于设计的文化意向</p></div><span class="module-badge">原有对话模块</span></header>
+            <div class="chat-stream">
+              <article class="message user"><span class="avatar">我</span><div class="bubble">我想为 CR400BF 设计一套中国传统文化主题涂装，整体要现代、庄重，同时具有速度感。</div></article>
+              <article class="message"><span class="avatar">AI</span><div class="bubble">我建议从“文化身份—视觉意向—车体适配”三个层次展开。可优先探索龙纹、祥云与宫墙朱红，同时用青花蓝或山水灰作为少量现代化点缀。你可以在右侧确认希望进入下一阶段的意向。</div></article>
+              <article class="message user"><span class="avatar">我</span><div class="bubble">纹样不要太复杂，需要适合修长车身，并保留较多金属色留白。</div></article>
+              <article class="message"><span class="avatar">AI</span><div class="bubble">已记录：降低纹样密度、强调水平延展、保留银白金属底色。后续纹样推荐会同时提供传统、几何、极简和现代融合方向。</div></article>
+            </div>
+            <div class="chat-input"><input aria-label="补充设计需求" placeholder="继续补充文化主题、气质或车型要求"><button class="primary-button" type="button">发送</button></div>
+          </div>
+          <aside class="intent-panel">
+            <header class="module-header"><div><h1>设计意向清单</h1><p>人工确认后进入纹样推荐</p></div><span class="module-badge">用户决策</span></header>
+            <div class="intent-content">
+              <div class="summary-card"><strong>当前任务摘要</strong><p>车型：CR400BF 严格侧视白模<br>目标：现代、庄重、具有速度感<br>约束：保留窗门结构与大面积银白留白</p></div>
+              <h2 class="section-title">AI 发散的文化意向</h2>
+              <div class="intent-grid">${intentionOptions.map((item) => `<button class="intent-chip ${state.intentions.includes(item) ? 'is-selected' : ''}" type="button" data-intent="${item}" aria-pressed="${state.intentions.includes(item)}">${item}</button>`).join('')}</div>
+              <h2 class="section-title">共享上下文</h2>
+              <div class="summary-card"><p>已选意向会用于多风格纹样推荐、纹样转化提示词、色彩情绪板检索和最终多模态提示词。</p></div>
+            </div>
+            <footer class="intent-footer"><button class="primary-button" type="button" data-action="confirm-demand" ${state.intentions.length ? '' : 'disabled'}>确认意向，进入纹样推荐</button></footer>
+          </aside>
+        </section>`;
+      }
+
+      function renderWorkspace() {
+        const region = document.querySelector('[data-region="main-workspace"]');
+        region.innerHTML = state.activeStage === 'demand'
+          ? renderDemand()
+          : `<section class="placeholder-view" data-view="${state.activeStage}"><p>${stages.find(stage => stage.id === state.activeStage)?.label}</p></section>`;
+      }
+
+      function renderAll() {
+        renderStageNav();
+        renderWorkspace();
+      }
+
+      function resetDemo() {
+        state = clone(INITIAL_STATE);
+        renderAll();
+      }
+
+      document.addEventListener('click', (event) => {
+        const target = event.target.closest('button');
+        if (!target) return;
+        if (target.dataset.stageId && canOpenStage(target.dataset.stageId)) {
+          state.activeStage = target.dataset.stageId;
+          renderAll();
+        }
+        if (target.dataset.intent) {
+          const value = target.dataset.intent;
+          state.intentions = state.intentions.includes(value)
+            ? state.intentions.filter((item) => item !== value)
+            : [...state.intentions, value];
+          renderWorkspace();
+        }
+        if (target.dataset.action === 'confirm-demand') {
+          state.demandConfirmed = true;
+          state.activeStage = 'recommend';
+          renderAll();
+        }
+        if (target.dataset.action === 'reset-demo') resetDemo();
+      });
+
+      window.prototypeApi = { getState: () => clone(state), reset: resetDemo };
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
