@@ -1,0 +1,326 @@
+.pattern-view-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: #eceef2;
+  border-radius: 24px;
+  margin-left: auto;
+}
+.pattern-view-switch button {
+  border: 0;
+  background: transparent;
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: #737680;
+  cursor: pointer;
+}
+.pattern-view-switch button[aria-pressed="true"] {
+  background: #191a1d;
+  color: #fff;
+}
+.pattern-graph {
+  position: relative;
+  background: #f5f6f9;
+  border: 1px solid #e3e5eb;
+  border-radius: 26px;
+  overflow: hidden;
+  margin: 12px 0 24px;
+  color: #25262a;
+}
+.pattern-graph__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 24px;
+  gap: 12px;
+}
+.pattern-graph__top strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+.pattern-graph__top span {
+  font-size: 12px;
+  color: #888b96;
+}
+.pattern-graph__top div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pattern-graph svg {
+  width: 100%;
+  display: block;
+  min-height: 420px;
+  max-height: 740px;
+  touch-action: none;
+  background-image: radial-gradient(#dadde5 1px, transparent 1px);
+  background-size: 22px 22px;
+  cursor: grab;
+}
+.pattern-graph__edge path {
+  fill: none;
+  stroke: #c7cbd5;
+  stroke-width: 1.4;
+}
+.pattern-graph__edge.is-active path {
+  stroke: #929e32;
+  stroke-width: 2;
+}
+.pattern-graph__edge text {
+  font-size: 11px;
+  fill: #656c3c;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #f5f6f9;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.pattern-graph__node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid #d9dce5;
+  font-size: 12px;
+  color: #535663;
+  cursor: pointer;
+  box-shadow: 0 4px 12px #252b4110;
+  padding: 0 9px;
+}
+.pattern-graph__node span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pattern-graph__node.is-motif {
+  background: #202125;
+  color: #e3ff42;
+  border-color: #202125;
+  font-weight: 600;
+}
+.pattern-graph__node.is-pattern {
+  height: 108px;
+  border-radius: 17px;
+  flex-direction: column;
+  padding: 5px;
+  gap: 6px;
+  background: white;
+}
+.pattern-graph__node img {
+  width: 84px;
+  height: 77px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f0f1f4;
+  pointer-events: none;
+}
+.pattern-graph__node.is-pattern span {
+  width: 100%;
+  font-size: 10px;
+  line-height: 14px;
+}
+.pattern-graph__node.is-focused,
+.pattern-graph__node.is-selected {
+  border: 2px solid #bcd600;
+}
+.pattern-graph__node i {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-style: normal;
+  background: #ddfa00;
+  color: #161719;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+}
+.pattern-graph__node:focus-visible,
+.pattern-graph button:focus-visible {
+  outline: 2px solid #697b00;
+  outline-offset: 2px;
+}
+.pattern-graph__detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -3px 18px 14px;
+  background: #fff;
+  border: 1px solid #e3e5ec;
+  border-radius: 18px;
+  padding: 13px;
+  position: relative;
+  box-shadow: 0 6px 24px #252b4108;
+}
+.pattern-graph__detail div {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pattern-graph__detail strong {
+  max-width: 250px;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pattern-graph__detail small {
+  color: #91939d;
+}
+.pattern-graph__detail button,
+.pattern-graph__empty button,
+.pattern-graph__range button {
+  border: 0;
+  border-radius: 12px;
+  background: #f0f1f5;
+  padding: 10px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #393c44;
+}
+.pattern-graph__detail .pattern-graph__add {
+  background: #dfff00;
+  color: #202125;
+}
+.pattern-graph__bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+}
+.pattern-graph__legend {
+  display: flex;
+  gap: 13px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #888b96;
+}
+.pattern-graph__legend span:first-child {
+  color: #606934;
+}
+.pattern-graph__tools {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  gap: 4px;
+  padding: 4px;
+}
+.pattern-graph__tools button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 7px 10px;
+  color: #555964;
+}
+.pattern-graph__tools span {
+  font-size: 12px;
+  min-width: 40px;
+  text-align: center;
+}
+.pattern-graph__empty {
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #868995;
+}
+.pattern-graph__range {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 20px 15px;
+  font-size: 12px;
+  color: #7c808d;
+}
+.pattern-graph__range button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 900px) {
+  .pattern-graph__detail {
+    flex-wrap: wrap;
+  }
+  .pattern-graph__detail div {
+    flex-basis: 100%;
+  }
+  .pattern-graph__top {
+    padding: 16px;
+  }
+  .pattern-graph__legend span:last-child {
+    display: none;
+  }
+  .pattern-graph svg {
+    min-height: 300px;
+  }
+  .pattern-graph__bottom {
+    padding: 10px;
+    flex-wrap: wrap;
+  }
+}
+.pattern-graph__size {
+  border: 1px solid #dfe2ea;
+  background: white;
+  border-radius: 12px;
+  padding: 8px 12px;
+  color: #51555f;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pattern-graph.is-large {
+  position: fixed;
+  inset: 76px 24px 12px 212px;
+  z-index: 45;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 90px #252b4126;
+}
+.pattern-graph.is-large svg {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+.pattern-graph.is-large .pattern-graph__top {
+  flex-shrink: 0;
+}
+.pattern-graph.is-large .pattern-graph__detail {
+  flex-shrink: 0;
+}
+.pattern-graph__node {
+  animation: graph-node-enter 0.25s ease-out;
+}
+@keyframes graph-node-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pattern-graph__node {
+    animation: none;
+  }
+}
+@media (max-width: 900px) {
+  .pattern-graph.is-large {
+    inset: 75px 10px 10px;
+  }
+}
+.pattern-graph__node small {
+  font-size: 9px;
+  color: #9397a3;
+  margin-right: 5px;
+  white-space: nowrap;
+}

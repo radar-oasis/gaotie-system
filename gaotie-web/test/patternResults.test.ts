@@ -16,10 +16,8 @@ describe('pattern result pagination', () => {
     }));
 
     expect(clampPatternPage(4, manyPatterns.length)).toBe(2);
-    expect(getPatternPage(manyPatterns, 2).map((pattern) => pattern.id)).toEqual([
-      'p-13',
-      'p-14',
-      'p-15',
-    ]);
+    expect(getPatternPage(manyPatterns, 2).map((pattern) => pattern.id)).toEqual(
+      Array.from({ length: 3 }, (_, index) => `p-${PATTERN_PAGE_SIZE + index + 1}`),
+    );
   });
 });

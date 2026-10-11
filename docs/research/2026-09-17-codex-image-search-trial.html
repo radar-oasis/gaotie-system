@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>青花龙纹 · 搜图与配色实验</title>
+<style>
+body{margin:0;background:#f3f2ee;color:#243346;font:16px/1.7 system-ui,sans-serif}main{max-width:1100px;margin:48px auto;padding:24px}h1{font-size:36px;margin:0}p{color:#586778}.board{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin:28px 0}.card{background:white;padding:16px;border-radius:16px}.card img{width:100%;height:260px;object-fit:contain}.card a{color:#506080}.swatches{display:flex;margin:14px 0;gap:4px}.swatch{flex:1;text-align:center;font-size:11px}.swatch i{display:block;height:64px;border-radius:6px;background:var(--c)}section{background:white;border-radius:16px;padding:24px;margin:20px 0}.note{font-size:14px}@media(max-width:720px){.board{grid-template-columns:1fr}}
+</style><main>
+<p>本地 Codex 实际联网检索 / 2026-09-17 / 独立实验，未接入业务页面</p>
+<h1>青花龙纹 · 色彩参考情绪板</h1>
+<p>搜索主题：Chinese blue and white dragon porcelain。以下 3 张是本地 Codex 返回的网络图片，不是 AI 生成图。图片均成功读取并通过项目现有提色服务；此页面是将实验结果整理成的静态看板，不是已实现的自动看板功能。</p>
+<div class="board">
+<article class="card"><img referrerpolicy="no-referrer" src="https://www.lelandlittle.com/images/inventory/medium/440/440555_1.jpg" alt="青花龙纹盘参考一"><a href="https://www.lelandlittle.com/items/440555/a-chinese-porcelain-blue-and-white-large-dragon-dish/">查看来源 · Leland Little</a><p>实测：635 × 635，66,539 字节</p></article>
+<article class="card"><img referrerpolicy="no-referrer" src="https://p1.liveauctioneers.com/323/81031/42085713_1_x.jpg?height=512&amp;quality=70&amp;version=1445634994" alt="青花龙纹盘参考二"><a href="https://www.liveauctioneers.com/price-result/16th17th-c-chinese-blue-and-white-dragon-plate/">查看来源 · LiveAuctioneers</a><p>实测：543 × 512，54,194 字节</p></article>
+<article class="card"><img referrerpolicy="no-referrer" src="https://image.invaluable.com/housePhotos/Artvisory/31/747131/H22782-L330769873.JPG" alt="青花龙纹盘参考三"><a href="https://www.invaluable.com/auction-lot/a-chinese-blue-and-white-dragon-dish-guangxu-six--19-c-a7b4707963">查看来源 · Invaluable</a><p>实测：1000 × 945，147,570 字节</p></article>
+</div>
+<section><h2>参考一 · 图片实际提取色</h2><div class="swatches">
+<div class="swatch"><i style="--c:#607090"></i>#607090</div><div class="swatch"><i style="--c:#506080"></i>#506080</div><div class="swatch"><i style="--c:#7080a0"></i>#7080a0</div><div class="swatch"><i style="--c:#90a0b0"></i>#90a0b0</div><div class="swatch"><i style="--c:#b0c0c0"></i>#b0c0c0</div><div class="swatch"><i style="--c:#8090a0"></i>#8090a0</div><div class="swatch"><i style="--c:#c0d0d0"></i>#c0d0d0</div><div class="swatch"><i style="--c:#f0f0f0"></i>#f0f0f0</div></div><p class="note">按原有 RGB 量化频率算法提取，不是模型凭文字推测。没有将三张图片混合统计。</p></section>
+<section><h2>现有服务输出 · 邻近色方案</h2><div class="swatches"><div class="swatch"><i style="--c:#609080"></i>#609080</div><div class="swatch"><i style="--c:#608890"></i>#608890</div><div class="swatch"><i style="--c:#607090"></i>#607090</div><div class="swatch"><i style="--c:#686090"></i>#686090</div><div class="swatch"><i style="--c:#806090"></i>#806090</div></div><p class="note">由第一主色按 HSL 色相规则推导。推导色不等于原图颜色，也不代表文化寓意或涂装适用性已验证。</p></section>
+<section><h2>实验结论与边界</h2><p>已验证：本地 Codex 联网搜索 → 结构化返回图片地址与来源 → 3 张图片读取 → 现有服务提取色板并生成 4 类方案。不需要新增 Brave / Tavily 密钥，但使用现有 Codex 账户及其额度。</p><p>待实现：页面内连续对话、从项目自动继承文化主题、用户选图、自动组装看板、项目保存和最终生图采纳。</p><p>待改善：参考二、三的主色分别为 #f0f0f0 和 #f0f0e0，背景与瓷胎颜色可能压过青花纹样。纯灰白主色导致邻近色与互补色重复，不能把服务返回成功当作设计质量达标。</p><p class="note">图片仅作为本次参考实验，通过原站链接展示；未取得商业使用授权。搜索结果不等于获得转载、导出或上传至生图服务的许可。外链可能失效或禁止显示。未改动现有生图适配器，也未写入项目数据库。</p></section>
+</main></html>

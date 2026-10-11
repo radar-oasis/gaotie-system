@@ -1,0 +1,290 @@
+{
+  "date": "2026-09-17",
+  "packages": {
+    "colorthief": "3.5.0",
+    "material": "0.4.0"
+  },
+  "conditions": "All use same <=120x120 pixels. ColorThief quality=1, OKLCH, ignoreWhite=false; MCU Celebi maxColors=8 then default Score desired=4. Current compiled service unchanged. Neutral controls not excluded.",
+  "results": [
+    {
+      "name": "青花盘一",
+      "source": "https://www.lelandlittle.com/images/inventory/medium/440/440555_1.jpg",
+      "sha256": "75c4391128c292a0f91231e8f5e2e24b458a35bd93ed7c999f67e8331d1e4605",
+      "current": [
+        "#607090",
+        "#506080",
+        "#7080a0",
+        "#90a0b0",
+        "#b0c0c0",
+        "#8090a0",
+        "#c0d0d0",
+        "#f0f0f0"
+      ],
+      "colorThief": [
+        "#4e6085",
+        "#8e9fb0",
+        "#f9f9f4",
+        "#c5c1d1",
+        "#d4dee0",
+        "#f9f3f1",
+        "#c5d3cc",
+        "#b0b5b3"
+      ],
+      "materialQuantized": [
+        "#fefefe",
+        "#a6b2bc",
+        "#6f809c",
+        "#c5cfd0",
+        "#8796aa",
+        "#5d6f90",
+        "#4e6084",
+        "#3b4c76"
+      ],
+      "materialRanked": [
+        "#c5cfd0",
+        "#4e6084",
+        "#a6b2bc"
+      ],
+      "rankedContainsFallback": false,
+      "metrics": {
+        "current": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 7
+        },
+        "colorThief": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 4
+        },
+        "materialQuantized": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 6
+        }
+      },
+      "currentAnalogousUnique": 5,
+      "materialSeedAnalogousUnique": 5
+    },
+    {
+      "name": "青花盘二",
+      "source": "https://p1.liveauctioneers.com/323/81031/42085713_1_x.jpg?height=512&quality=70&version=1445634994",
+      "sha256": "dfed2b7e2709ef67e7b5e1802f6d7a6056a2551d973f9f253d91ace9842c170d",
+      "current": [
+        "#f0f0f0",
+        "#e0f0f0",
+        "#b0c0d0",
+        "#d0e0e0",
+        "#90a0c0",
+        "#8090b0",
+        "#c0d0e0",
+        "#101010"
+      ],
+      "colorThief": [
+        "#040403",
+        "#8294b0",
+        "#37435f",
+        "#d7e2e8",
+        "#e7efe9",
+        "#0b0a10",
+        "#6c6c68",
+        "#949094"
+      ],
+      "materialQuantized": [
+        "#050505",
+        "#e3ebea",
+        "#b7c3d0",
+        "#8d9bb2",
+        "#6e7ea3",
+        "#566897",
+        "#384674",
+        "#3b3c41"
+      ],
+      "materialRanked": [
+        "#e3ebea",
+        "#8d9bb2",
+        "#384674"
+      ],
+      "rankedContainsFallback": false,
+      "metrics": {
+        "current": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 6
+        },
+        "colorThief": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 2
+        },
+        "materialQuantized": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 5
+        }
+      },
+      "currentAnalogousUnique": 1,
+      "materialSeedAnalogousUnique": 5
+    },
+    {
+      "name": "青花盘三",
+      "source": "https://image.invaluable.com/housePhotos/Artvisory/31/747131/H22782-L330769873.JPG",
+      "sha256": "a3d551c3ed4b400f6045a308017cde9db104c04c5a41e98a0a21ac0dda3a25f0",
+      "current": [
+        "#f0f0e0",
+        "#e0e0e0",
+        "#c0d0d0",
+        "#6080b0",
+        "#d0d0d0",
+        "#b0c0d0",
+        "#d0e0e0",
+        "#f0f0f0"
+      ],
+      "colorThief": [
+        "#7893b4",
+        "#274485",
+        "#f5f3ee",
+        "#797ba4",
+        "#d6dcdb",
+        "#ccd8dd",
+        "#adaa9e",
+        "#e8e1ca"
+      ],
+      "materialQuantized": [
+        "#fffefe",
+        "#6e87af",
+        "#49659b",
+        "#d4d8d6",
+        "#94a6bb",
+        "#b8c3ca",
+        "#ecece4",
+        "#273d82"
+      ],
+      "materialRanked": [
+        "#6e87af",
+        "#b8c3ca"
+      ],
+      "rankedContainsFallback": false,
+      "metrics": {
+        "current": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 4
+        },
+        "colorThief": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 3
+        },
+        "materialQuantized": {
+          "count": 8,
+          "unique": 8,
+          "chromaAbove10": 5
+        }
+      },
+      "currentAnalogousUnique": 5,
+      "materialSeedAnalogousUnique": 5
+    },
+    {
+      "name": "纯白控制",
+      "source": "synthetic control",
+      "sha256": "26c16e967c7395cb90e8e0119c70a336b7a0d327aeae6ca10ad733a057941c12",
+      "current": {
+        "error": "No usable colors extracted from image"
+      },
+      "colorThief": [
+        "#ffffff"
+      ],
+      "materialQuantized": [
+        "#ffffff"
+      ],
+      "materialRanked": [
+        "#4285f4"
+      ],
+      "rankedContainsFallback": true,
+      "metrics": {
+        "colorThief": {
+          "count": 1,
+          "unique": 1,
+          "chromaAbove10": 0
+        },
+        "materialQuantized": {
+          "count": 1,
+          "unique": 1,
+          "chromaAbove10": 0
+        }
+      },
+      "currentAnalogousUnique": null,
+      "materialSeedAnalogousUnique": 5
+    },
+    {
+      "name": "纯黑控制",
+      "source": "synthetic control",
+      "sha256": "eb04a69ecdf9994f6ad3da4cf893d7fa6d97cda559095f787d1e770fe25b5765",
+      "current": {
+        "error": "No usable colors extracted from image"
+      },
+      "colorThief": [
+        "#000000"
+      ],
+      "materialQuantized": [
+        "#000000"
+      ],
+      "materialRanked": [
+        "#4285f4"
+      ],
+      "rankedContainsFallback": true,
+      "metrics": {
+        "colorThief": {
+          "count": 1,
+          "unique": 1,
+          "chromaAbove10": 0
+        },
+        "materialQuantized": {
+          "count": 1,
+          "unique": 1,
+          "chromaAbove10": 0
+        }
+      },
+      "currentAnalogousUnique": null,
+      "materialSeedAnalogousUnique": 5
+    },
+    {
+      "name": "灰色控制",
+      "source": "synthetic control",
+      "sha256": "dc133a2912a62833531f4838456c75d95c801922718109a2c6a5dab3ee650337",
+      "current": [
+        "#909090"
+      ],
+      "colorThief": [
+        "#888888"
+      ],
+      "materialQuantized": [
+        "#888888"
+      ],
+      "materialRanked": [
+        "#4285f4"
+      ],
+      "rankedContainsFallback": true,
+      "metrics": {
+        "current": {
+          "count": 1,
+          "unique": 1,
+          "chromaAbove10": 0
+        },
+        "colorThief": {
+          "count": 1,
+          "unique": 1,
+          "chromaAbove10": 0
+        },
+        "materialQuantized": {
+          "count": 1,
+          "unique": 1,
+          "chromaAbove10": 0
+        }
+      },
+      "currentAnalogousUnique": 1,
+      "materialSeedAnalogousUnique": 5
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+.pattern-view-switch {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  margin-left: auto;
+  background: #eceef2;
+  border: 1px solid var(--pattern-line, #e6e7ec);
+  border-radius: 24px;
+}
+.pattern-view-switch button {
+  min-height: 36px;
+  padding: 8px 20px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: var(--pattern-muted, #74777f);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+.pattern-view-switch button:hover { background: #e1e3e9; color: #191a1d; }
+.pattern-view-switch button[aria-pressed="true"] {
+  background: var(--pattern-ink, #191a1d);
+  color: var(--pattern-accent, #d8fa00);
+}
+.pattern-view-switch button:focus-visible {
+  outline: 2px solid #74777f;
+  outline-offset: 3px;
+}

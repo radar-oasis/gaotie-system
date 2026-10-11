@@ -1,0 +1,224 @@
+超级画布功能交接文档
+生成时间：2026-05-10
+工作分支：
+- 外层仓库：feature/super-canvas，当前提交 7e5f6c2
+- 后端仓库 gaotie-server：feature/super-canvas，当前提交 df59fae
+
+一、这次完成了什么
+
+本次新增了“超级画布”页面和配套后端生图接口。整体目标是让用户从“意象图片检索”模块选择纹样图片，拖入一个可编辑画布；用户也可以上传高铁白膜等底图，在画布上移动、缩放、涂鸦、框选保存素材，并通过底部提示词调用即梦图片生成 4.0，生成透明底 PNG 后回填到画布。
+
+主要功能包括：
+1. 顶部导航新增“超级画布”入口。
+2. 左侧可折叠/可调整宽度面板展示已选意象图片，并支持拖拽到画布。
+3. 中间画布支持：
+   - 拖入纹样图片；
+   - 上传本地图片；
+   - 选择、移动、滚轮缩放图片图层；
+   - 画笔涂鸦和批注；
+   - 框选区域并导出为 PNG；
+   - 底部输入提示词调用后端生图。
+4. 右侧可折叠/可调整宽度面板展示框选得到的图片素材，并支持再次拖回画布。
+5. 后端新增 /super-canvas/generate 接口：
+   - 使用 Volcengine AK/SK 签名；
+   - 调用即梦图片生成 4.0 模型；
+   - 处理 URL 或 base64 返回图；
+   - 将图片后处理为透明底 PNG；
+   - 保存到 generated/super-canvas；
+   - 返回相对图片路径给前端。
+6. 后端增强了参考图安全处理：
+   - data URL、本地 backend URL、站内 URL 会先由后端下载/保存/重新发布，再传给即梦；
+   - 任意公网 http/https 图片可直接透传；
+   - localhost、内网、链路本地、IPv6 私网、IPv4-mapped IPv6 私网等地址会被拒绝，避免把后端做成带凭证的内网代理；
+   - 如果需要把上传图/框选图/本地图片作为即梦参考图，必须配置公网可访问的 SUPER_CANVAS_PUBLIC_BASE_URL。
+
+二、关键文件
+
+前端相关文件位于外层仓库 gaotie-web：
+- gaotie-web/src/components/superCanvas/SuperCanvasPage.tsx
+  超级画布主页面，包含面板、画布、拖拽、上传、画笔、框选、生成等交互。
+- gaotie-web/src/components/superCanvas/SuperCanvasPage.css
+  超级画布页面样式。
+- gaotie-web/src/components/superCanvas/types.ts
+  画布图层、画笔、框选、生成返回值等共享类型。
+- gaotie-web/src/components/superCanvas/layerMath.ts
+  图层创建、缩放、坐标换算等纯工具函数。
+- gaotie-web/src/components/superCanvas/imageUrls.ts
+  后端图片 URL 归一化，默认使用 VITE_API_BASE_URL 或 http://localhost:3000。
+- gaotie-web/src/components/superCanvas/renderCanvas.ts
+  将画布图层导出为 PNG data URL。
+- gaotie-web/src/components/superCanvas/superCanvasApi.ts
+  前端调用 /super-canvas/generate 的 API helper。
+- gaotie-web/src/components/superCanvas/*.test.*
+  超级画布工具和页面交互测试。
+- gaotie-web/src/App.tsx
+  接入 SuperCanvasPage。
+- gaotie-web/src/components/TopNav.tsx
+  新增“超级画布”导航按钮。
+- gaotie-web/test/patternResults.test.ts
+  原有分页测试已改为 Vitest 风格，避免 npm test 报 “No test suite found”。
+
+后端相关文件位于独立仓库 gaotie-server：
+- gaotie-server/src/super-canvas/volcengine-signer.ts
+  Volcengine OpenAPI AK/SK 请求签名。
+- gaotie-server/src/super-canvas/jimeng-client.ts
+  即梦图片生成 4.0 提交任务、轮询、结果解析客户端。
+- gaotie-server/src/super-canvas/transparentize.ts
+  图片透明化后处理，使用 sharp。
+- gaotie-server/src/super-canvas/super-canvas.controller.ts
+  /super-canvas/generate 控制器和请求校验。
+- gaotie-server/src/super-canvas/super-canvas.service.ts
+  生图主流程、参考图处理、图片下载/保存、透明化处理。
+- gaotie-server/src/super-canvas/*.spec.ts
+  后端 signer、client、transparentize、controller/service 测试。
+- gaotie-server/src/app.module.ts
+  注册 SuperCanvasController 和 SuperCanvasService。
+- gaotie-server/src/main.ts
+  body size limit、CORS、generated 静态资源挂载。
+
+三、环境变量
+
+后端必须配置：
+- JIMENG_ACCESS_KEY_ID
+- JIMENG_SECRET_ACCESS_KEY
+
+不要把密钥写入前端，也不要提交到 git。之前对话里出现过密钥，正式使用前建议在火山/即梦侧轮换一次。
+
+可选但很重要：
+- SUPER_CANVAS_PUBLIC_BASE_URL
+
+说明：
+- 如果用户只做纯文本生图，不传参考图，可以不配置 SUPER_CANVAS_PUBLIC_BASE_URL。
+- 如果用户要把上传图、框选图、本地站内图作为参考图给即梦使用，必须配置为公网可访问的后端地址，例如 https://your-public-backend.example.com。
+- 不能配置 localhost、127.0.0.1、内网地址、*.localhost、localhost. 等地址。后端会拒绝这些地址。
+- 本地联调可用 ngrok、Cloudflare Tunnel、内网穿透等工具把后端 3000 暴露出去，然后把 SUPER_CANVAS_PUBLIC_BASE_URL 指向该公网地址。
+
+前端可选配置：
+- VITE_API_BASE_URL
+
+默认值是 http://localhost:3000。部署环境应设置为真实后端地址。
+
+四、如何启动
+
+后端：
+1. cd /Users/lisensen/gaotie-system/gaotie-server
+2. export JIMENG_ACCESS_KEY_ID=你的 AccessKeyID
+3. export JIMENG_SECRET_ACCESS_KEY=你的 SecretAccessKey
+4. 如果要使用参考图生图：export SUPER_CANVAS_PUBLIC_BASE_URL=https://公网可访问后端地址
+5. npm run build
+6. npm run start:prod
+
+开发模式也可以使用：
+- npm run start:dev
+
+前端：
+1. cd /Users/lisensen/gaotie-system/gaotie-web
+2. 如有需要：export VITE_API_BASE_URL=http://localhost:3000
+3. npm run dev -- --host 127.0.0.1 --port 5173
+4. 浏览器打开 http://127.0.0.1:5173/
+
+五、如何验收
+
+自动化验收命令：
+
+后端：
+cd /Users/lisensen/gaotie-system/gaotie-server
+npm test -- --runInBand
+npm run build
+
+前端：
+cd /Users/lisensen/gaotie-system/gaotie-web
+npm test
+npm run build
+npm run lint
+
+最近一次验证结果，执行时间：2026-05-10：
+- 后端 npm test -- --runInBand：7 个 test suite 通过，67 个测试通过。
+- 后端 npm run build：通过。
+- 前端 npm test：5 个测试文件通过，25 个测试通过。
+- 前端 npm run build：通过。
+- 前端 npm run lint：通过。
+
+手动验收路径：
+1. 打开 http://127.0.0.1:5173/。
+2. 顶部导航应能看到“超级画布”。
+3. 先在“意象图片检索”中选择若干纹样，再切到“超级画布”，左侧应显示已选纹样。
+4. 从左侧拖一个纹样到画布，画布中应出现图片图层并被选中。
+5. 点击上传按钮，上传高铁车身白膜或其他图片，图片应出现在画布中央附近。
+6. 选择图层后拖动，图层应跟随鼠标移动。
+7. 对选中图层滚轮缩放，尺寸应变化且不崩坏。
+8. 切换画笔工具，拖动画布应出现批注线条。
+9. 切换截取工具，框选区域后，右侧应出现截取素材。
+10. 右侧截取素材应可再次拖回画布。
+11. 底部输入框为空时点击 AI 生成，不应调用有效生成。
+12. 输入提示词后点击 AI 生成：
+    - 未选中参考图时，会走纯文本生图；
+    - 选中图片图层时，会把该图作为参考图；
+    - 如参考图是本地/上传/框选图，后端必须配置公网 SUPER_CANVAS_PUBLIC_BASE_URL，否则会返回清晰错误。
+13. 后端返回图片后，画布中应新增“AI 生成纹样”图层。
+
+六、已做的安全和稳定性处理
+
+1. 前端不保存、不暴露即梦密钥。
+2. 后端只从环境变量读取 JIMENG_ACCESS_KEY_ID 和 JIMENG_SECRET_ACCESS_KEY。
+3. request body 限制已放大到 30 MB，以支持 data URL 参考图。
+4. 参考图 data URL 只支持 png、jpg/jpeg、webp。
+5. 参考图和生成图下载都有字节上限，默认 20 MB。
+6. 图片下载有超时控制。
+7. 生成文件名使用 basename，避免路径穿越。
+8. 私网/localhost/特殊 localhost alias/IPv4-mapped IPv6 私网等参考图 URL 会被拒绝或在站内场景下重新发布，不会原样发给即梦。
+9. 本地/上传/框选参考图需要公网基址，否则后端会提前拒绝，而不是把 localhost 地址传给云端。
+10. 画布侧面板 resize 已处理 pointerup、pointercancel、重复 resize 和组件卸载清理。
+11. 上传文件限制为 image/* 且最大 20 MB。
+12. 拖拽数据有运行时 shape 校验。
+
+七、当前已知注意点
+
+1. 生产环境 CORS 仍偏本地开发配置，当前 main.ts 主要允许本地 Vite 源。正式部署前建议改为环境变量驱动。
+2. 选中图层目前只显示蓝色 outline，不会自动提升到最高层；重叠图层场景下后创建的图层可能盖住选中图层。
+3. 前端长耗时异步任务没有完整 AbortController 取消机制；切换页面后，极端情况下回调仍可能完成。当前风险较低，但后续可加 mounted guard 或 abort。
+4. 即梦参考图能力依赖公网可访问地址。纯本地 localhost 环境可以验证 UI 和接口校验，但不能让云端访问本地图片。
+5. 外层仓库当前存在大量原本就未跟踪的应用文件；本次提交只纳入了与超级画布相关的新增/修改文件。gaotie-server 是独立 git 仓库。
+
+八、主要提交
+
+外层仓库 /Users/lisensen/gaotie-system：
+- 37a947b Add super canvas design spec
+- d30e197 Add super canvas implementation plan
+- 3e4f7c8 Add super canvas frontend utilities
+- 157ba38 Harden super canvas frontend utilities
+- e3fe531 Align super canvas frontend types
+- e5ed941 Validate super canvas zoom math
+- 59a7eac Add super canvas render and API helpers
+- d080b3b Add super canvas page
+- 31b1874 Harden super canvas page interactions
+- 7e5f6c2 Stabilize super canvas verification
+
+后端仓库 /Users/lisensen/gaotie-system/gaotie-server：
+- 17d0b2b Add super canvas transparent image processing
+- 9d3162c Harden transparent image processing
+- 988e4af Optimize transparent image border sampling
+- f263750 Add Volcengine request signing
+- 6642327 Harden Volcengine request signing
+- 3cbe97f Add Jimeng 4 image generation client
+- 57cb9d5 Harden Jimeng image client
+- 0e71ce7 Add super canvas generation API
+- ce2f2b8 Harden super canvas generation API
+- 92898c5 Tighten super canvas request validation
+- 6a6d9e5 Support data URL canvas references
+- da62950 Harden super canvas data URL handling
+- de2dfab Harden super canvas reference images
+- 585a8c0 Reject mapped private reference hosts
+- be9e533 Require public base for canvas references
+- df59fae Reject localhost public base aliases
+
+九、后续建议
+
+1. 部署前把后端 CORS、VITE_API_BASE_URL、SUPER_CANVAS_PUBLIC_BASE_URL 全部改成环境配置。
+2. 建议把即梦密钥轮换后再进入正式环境。
+3. 做一次真实公网环境联调，重点验证：
+   - SUPER_CANVAS_PUBLIC_BASE_URL 可被即梦访问；
+   - /generated/super-canvas 下的参考图可以公网访问；
+   - 即梦 4.0 返回图 URL/base64 都能被后端正确透明化。
+4. 如需更精细编辑，可继续补充图层顺序、旋转、透明度调节、撤销/重做、画布状态保存。
+5. 如需上生产，建议增加端到端测试，覆盖从前端点击生成到后端返回 generated URL 的完整链路。

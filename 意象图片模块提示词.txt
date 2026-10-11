@@ -1,0 +1,79 @@
+为了让智能体能够精准地理解你的需求并落地开发，这份文档将逻辑拆解为“意图解析层（大脑）”、“图谱检索层（执行）”和“前端展示层（交互）”。
+你可以直接将以下内容发送给开发智能体（Cursor/Windsurf/Claude Dev）：
+
+开发任务：智能设计意象检索系统 (Intent-based Design Retrieval)
+1. 系统概览
+本项目旨在构建一个结合“自然语言对话（LLM）”与“知识图谱（Neo4j）”的设计灵感检索系统。
+输入端： 既支持用户勾选 Tag，也支持自然语言对话（如“帮我找找清代家具上的龙纹，要有祥瑞的感觉”）。
+处理端： 使用 LLM 解析自然语言意图，映射为结构化图谱查询参数。
+输出端： 基于图谱检索的相关图片资源。
+2. 核心架构设计 (Backend Logic)
+A. 意图解析层 (LLM Parsing)
+系统需调用 DeepSeek API，将用户输入转换为查询结构。
+System Prompt 定义：
+Markdown
+
+# Role
+你是一位精通中国传统文化、纹样学及设计美学的专家，同时也是一位卓越的知识图谱查询构建师。你的任务是将用户的设计需求转化为后台 Neo4j 图谱的查询参数。
+
+# Knowledge Graph Schema (当前数据库元数据)
+- 核心实体类型: Pattern(设计意象), Carrier(载体), Dynasty(朝代), Motif(纹样), Material(材质), Layout(组织形式)
+- 核心关系: (Pattern)-[:CONTAINS_MOTIF]->(Motif), (Pattern)-[:MADE_OF_MATERIAL]->(Material), (Pattern)-[:BELONGS_TO_DYNASTY]->(Dynasty)...
+
+# Task
+1. 分析用户的自然语言需求，提取出核心的设计意象、历史时期、情感基调或制作工艺。
+2. 将这些意图映射到上述的图谱 Schema 标签中。
+3. 如果用户意图模糊（如“想要喜庆的感觉”），你需要基于文化背景进行推理（映射为: Motif: ["吉祥纹", "团花"], Material: ["红木", "丝绸"] 等）。
+4. 输出格式必须为纯 JSON，不要包含任何 markdown 标记以外的解释。
+
+# Output Format (JSON Only)
+{
+  "reasoning": "简要分析用户意图及映射逻辑",
+  "filters": {
+    "motifs": ["提取出的关键词列表"],
+    "dynasties": ["提取出的朝代列表"],
+    "materials": ["提取出的材质"],
+    "others": ["其他相关意图"]
+  },
+  "search_strategy": "match_exact (精准匹配) 或 fuzzy_semantic (语义模糊匹配)"
+}
+
+# Constraint
+- 如果用户需求与库中数据完全无关，请在 reasoning 中说明，并给出最接近的推荐。
+- 严禁臆造不存在的 Schema 字段。
+- 保持返回的 JSON 结构严格，方便后端解析。B. 图谱检索层 (Cypher Generation)
+后端需编写动态 Cypher 构建逻辑。
+逻辑流：
+接收 LLM 输出的 JSON Filter。
+动态拼接查询： Cypher  MATCH (p:Pattern)
+// 动态过滤条件
+WHERE (size($motifs) = 0 OR EXISTS { (p)-[:CONTAINS_MOTIF]->(m) WHERE m.name IN $motifs })
+  AND (size($dynasties) = 0 OR EXISTS { (p)-[:BELONGS_TO_DYNASTY]->(d) WHERE d.name IN $dynasties })
+RETURN p.name AS name, p.imageUrl AS url, p.dynasty_name AS dynasty
+LIMIT 20
+   
+3. 前端界面与交互 (Frontend Specification)
+布局方案：
+左侧 Sidebar： * 意图对话框： 集成 Chat UI，支持用户输入需求。
+标签联动区： AI 解析后自动点亮对应 Tag（作为反馈，用户也可手动修改）。
+中间 Main： * 瀑布流图库，展示搜索结果。
+支持“更多相关性”推荐（基于图谱中节点的邻居关系）。
+右侧 Action： * 选中的灵感卡片清单，并提供“确认目标，进入下一步”入口。
+交互闭环：
+用户输入对话 → API 调用 LLM → 后端执行 Cypher → 前端渲染图片。
+标签联动： 若 AI 解析出的 Filter 包含“清代”，左侧 Tag 栏应同步自动选中“清代”对应的 Tag，实现“聊天+UI”双向同步。
+4. 技术栈需求
+后端： [填入你的技术栈，例如 Python/FastAPI]
+图数据库： Neo4j (配合 neo4j-driver)
+LLM： DeepSeek API
+前端： [填入你的技术栈，例如 React + Tailwind CSS]
+5. 开发建议（给开发者的备注）
+容错处理： 当图谱中查询不到结果时，不要返回空，应让 LLM 给出一个“相关推荐”的逻辑（例如：查询“秦代青铜”，若无，则自动检索“汉代青铜”）。
+性能： 为 Pattern 节点的 name 属性添加索引。
+UI 状态： 确保前端组件可以同时由“用户点击 Tag”和“API 返回的结果”共同驱动状态更新。
+
+给你的执行建议：
+第一步（调试 Prompt）： 先在 DeepSeek 的 Chat 页面测试上述 Prompt，确认它能准确将你的复杂需求转化为 JSON。
+第二步（数据测试）： 先写一个简单的后端接口，确保输入 {"motifs": ["龙"]} 能够成功从 Neo4j 拿到图片链接。
+第三步（集成）： 将这两个模块通过一个 orchestrator（编排器）脚本连接起来，这就完成了最核心的意图引擎。
+如果你现在开始交给智能体，它会非常清楚该先从哪个接口开始写。你需要我为你写一段“后端处理 LLM 输出的 JSON 并转为 Cypher 的核心逻辑代码”吗？（这通常是开发中最容易卡壳的地方）

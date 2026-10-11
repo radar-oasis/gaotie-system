@@ -1,6 +1,11 @@
+import { useReusePattern } from './components/assets/useReusePattern';
+import AssetsPage from './components/assets/AssetsPage';
 import { useCallback, useState } from 'react';
+import './App.css';
+import { AuthProvider, useAuth } from './auth/AuthContext';
 import { ChatProvider, useChat } from './context/ChatContext';
 import { ImageSearchProvider } from './context/ImageSearchContext';
+import { CaseSearchContextProvider, type CaseReference } from './context/CaseSearchContext';
 import { SharedTagsProvider, useSharedTags, type ConfirmedTag } from './context/SharedTagsContext';
 import type { ChatMessage, Tag } from './context/ChatContext';
 import LeftWorkspace from './components/LeftWorkspace';
@@ -9,8 +14,21 @@ import TopNav from './components/TopNav';
 import ImageSearchPage from './components/ImageSearchPage';
 import LayoutElementsPage from './components/LayoutElementsPage';
 import SuperCanvasPage from './components/superCanvas/SuperCanvasPage';
+import { CaseSearchPage } from './components/caseSearch';
+import { ColorConfigPage } from './components/colorConfig';
+import { ColorConfigProvider } from './context/ColorConfigContext';
+import { SuperCanvasProvider } from './context/SuperCanvasContext';
+import { FinalProposalProvider } from './context/FinalProposalContext';
+import FinalProposalPage from './components/finalProposal/FinalProposalPage';
+import { apiUrl } from './utils/backendUrls';
+import LoginPage from './components/auth/LoginPage';
+import { ProjectProvider, useProject } from './projects/ProjectContext';
+import ProjectPersistence from './components/projects/ProjectPersistence';
+import type { WorkspaceTab } from './projects/workspaceSnapshot';
 
-type TabType = 'demand' | 'image' | 'layout' | 'canvas';
+import './components/WorkspaceDialogue.css';
+
+type TabType = WorkspaceTab;
 
 function generateId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -25,7 +43,7 @@ interface DeepSeekResponse {
 }
 
 async function sendToDeepSeek(messages: ChatMessage[], tags: Tag[]): Promise<DeepSeekResponse> {
-  const response = await fetch('http://localhost:3000/chat', {
+  const response = await fetch(apiUrl('/chat'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -40,7 +58,7 @@ async function sendToDeepSeek(messages: ChatMessage[], tags: Tag[]): Promise<Dee
   return response.json();
 }
 
-function DemandAnalysisPage() {
+function DemandAnalysisPage({ onFindPatterns }: { onFindPatterns: () => void }) {
   const { chatHistory, selectedTags, addMessage, setIsInputting } = useChat();
   const { setConfirmedTags } = useSharedTags();
 
@@ -88,53 +106,88 @@ function DemandAnalysisPage() {
       topic: t.topic,
     }));
     setConfirmedTags(tagsToConfirm);
-    const tagsList = selectedTags.map((t) => `${t.topic ? t.topic + '-' : ''}${t.label}`).join('\n');
-    alert(`设计目标已确认！\n\n已选标签：\n${tagsList}\n\n即将进入意象图片检索模块...`);
-  }, [selectedTags, setConfirmedTags]);
+    onFindPatterns();
+  }, [selectedTags, setConfirmedTags, onFindPatterns]);
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div className="pattern-search-page cultural-theme-page">
       <LeftWorkspace onSendMessage={handleSendMessage} />
       <RightPanel onConfirm={handleConfirm} />
     </div>
   );
 }
 
-function ImageSearchWrapper() {
-  const { clearConfirmedTags } = useSharedTags();
+function CaseSearchWrapper({ onSkip }: { onSkip: () => void }) {
+  const handleConfirm = useCallback((cases: CaseReference[]) => {
+    console.log('Selected cases:', cases);
+    alert(`已确认 ${cases.length} 个涂装案例！\n\n案例列表：\n${cases.map(c => `• ${c.title}`).join('\n')}`);
+  }, []);
 
-  const handleConfirm = useCallback(() => {
-    clearConfirmedTags();
-    alert('设计目标已确认！\n\n即将进入设计生成流程...');
-  }, [clearConfirmedTags]);
-
-  return <ImageSearchPage onConfirm={handleConfirm} />;
+  return <CaseSearchPage onConfirm={handleConfirm} onSkip={onSkip} />;
 }
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<TabType>('demand');
+  const { currentProject } = useProject();
+  const reusePattern = useReusePattern(() => setActiveTab('canvas'), currentProject?.id);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <TopNav activeTab={activeTab} onTabChange={setActiveTab} />
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        {activeTab === 'demand' && <DemandAnalysisPage />}
-        {activeTab === 'image' && <ImageSearchWrapper />}
-        {activeTab === 'layout' && <LayoutElementsPage />}
-        {activeTab === 'canvas' && <SuperCanvasPage />}
-      </div>
+    <div className="pattern-workspace" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <ProjectPersistence activeTab={activeTab} onRestoreTab={setActiveTab}>
+        <div className="pattern-workspace__body">
+        <TopNav activeTab={activeTab} onTabChange={setActiveTab} />
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {activeTab === 'demand' && <DemandAnalysisPage key={currentProject?.id ?? 'local'} onFindPatterns={() => setActiveTab('image')} />}
+          {activeTab === 'image' && <ImageSearchPage key={currentProject?.id ?? 'local'} onConfirm={() => setActiveTab('canvas')} />}
+          {activeTab === 'layout' && <LayoutElementsPage />}
+          {activeTab === 'color' && <ColorConfigPage />}
+          {activeTab === 'canvas' && <SuperCanvasPage projectKey={currentProject?.id ?? 'local'} />}
+          {activeTab === 'case' && <CaseSearchWrapper onSkip={() => setActiveTab('proposal')} />}
+          {activeTab === 'assets' && <AssetsPage onReusePattern={reusePattern} />}
+          {activeTab === 'proposal' && <FinalProposalPage onNavigate={setActiveTab} />}
+        </div>
+        </div>
+      </ProjectPersistence>
     </div>
+  );
+}
+
+function AuthenticatedApp() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="app-loading">正在进入工作台...</div>;
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  return (
+    <ProjectProvider>
+      <ChatProvider>
+        <SharedTagsProvider>
+          <ImageSearchProvider>
+            <CaseSearchContextProvider>
+              <ColorConfigProvider>
+                <SuperCanvasProvider>
+                  <FinalProposalProvider>
+                    <AppContent />
+                  </FinalProposalProvider>
+                </SuperCanvasProvider>
+              </ColorConfigProvider>
+            </CaseSearchContextProvider>
+          </ImageSearchProvider>
+        </SharedTagsProvider>
+      </ChatProvider>
+    </ProjectProvider>
   );
 }
 
 export default function App() {
   return (
-    <ChatProvider>
-      <SharedTagsProvider>
-        <ImageSearchProvider>
-          <AppContent />
-        </ImageSearchProvider>
-      </SharedTagsProvider>
-    </ChatProvider>
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
   );
 }

@@ -1,0 +1,21 @@
+/* Culture-theme dialogue is the shared visual baseline across workspaces. */
+.pattern-workspace .workspace-composer.workspace-composer{background:#fff;border:1px solid #e0e2e8;border-radius:20px;padding:16px 16px 12px 20px;min-height:108px;gap:12px;box-shadow:none}
+.pattern-workspace .workspace-composer.workspace-composer:focus-within{border-color:#999c84;box-shadow:0 0 0 3px #d8fa0018}
+.pattern-workspace .workspace-composer.workspace-composer textarea{border:0;outline:none;box-shadow:none;background:transparent;color:#25262b;font:inherit;font-size:15px;line-height:1.7;padding:0;min-height:70px;max-height:180px;resize:vertical;border-radius:0}
+.pattern-workspace .workspace-composer.workspace-composer textarea::placeholder{color:#90939c}
+.pattern-workspace .workspace-composer .workspace-send.workspace-send{display:grid;place-items:center;flex:none;align-self:flex-end;width:42px;height:42px;min-width:42px;min-height:42px;padding:0;border:0;border-radius:50%;background:#191a1d;color:#fff!important;box-shadow:none;cursor:pointer}
+.pattern-workspace .workspace-composer .workspace-send.workspace-send:hover:not(:disabled){background:#363839}
+.pattern-workspace .workspace-composer .workspace-send.workspace-send:disabled{opacity:.45;cursor:not-allowed}
+.pattern-workspace .workspace-send svg{width:22px;height:22px}
+.pattern-workspace .workspace-send:focus-visible{outline:2px solid #626773;outline-offset:3px}
+.workspace-control-label{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.pattern-workspace .studio-message.assistant,.pattern-workspace .case-message.ai>.case-message-text{border:1px solid var(--pattern-line,#e0e2e8);border-radius:var(--workspace-radius-panel,22px);background:#fff;padding:22px 24px;color:var(--pattern-ink,#25262b);font-size:14px;line-height:1.85}
+.pattern-workspace .studio-message.user,.pattern-workspace .case-message.user>.case-message-text{border:0;border-radius:var(--workspace-radius-panel,22px);background:#e9ebf1;padding:16px 20px;color:var(--pattern-ink,#25262b);font-size:14px;line-height:1.85}
+.pattern-workspace .studio-message p{font-size:14px;line-height:1.85}
+.pattern-workspace .proposal-chat{border:0;padding:0;background:transparent;box-shadow:none}
+.pattern-workspace .proposal-chat .proposal-hint{margin:0 0 10px}
+.pattern-workspace .proposal-chat .adjustment-history{margin:10px 4px 0}
+.pattern-workspace .proposal-chat .workspace-composer{display:flex;align-items:flex-end}
+.pattern-workspace .proposal-chat .workspace-composer textarea{flex:1;min-width:0}
+.pattern-workspace .theme-selected-item .pattern-selected__remove{font-size:inherit;font-weight:inherit}
+@media(max-width:600px){.pattern-workspace .workspace-composer.workspace-composer{padding:14px;gap:10px}.pattern-workspace .studio-message.assistant,.pattern-workspace .case-message.ai>.case-message-text{padding:16px}}

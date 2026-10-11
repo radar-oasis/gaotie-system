@@ -1,0 +1,21 @@
+.prompt-enhancer { grid-column: 1 / -1; width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #d8e3f3; border-radius: 12px; padding: 12px 14px; background: #f7faff; color: #26354d; font-size: 12px; text-align: left; }
+.prompt-enhancer__header { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.prompt-enhancer__header > div { flex: 0 1 auto; min-width: 150px; }
+.prompt-enhancer__header strong { display: block; font-size: 14px; }
+.prompt-enhancer__header span, .prompt-enhancer__hint { color: #63748b; font-size: 11px; }
+.prompt-enhancer p { margin: 6px 0; line-height: 1.6; overflow-wrap: anywhere; }
+.prompt-enhancer button { cursor: pointer; border: 1px solid #bdd0ea; border-radius: 6px; padding: 6px 10px; background: white; color: #2457a5; font: inherit; margin-right: 5px; }
+.prompt-enhancer button:disabled { opacity: .5; cursor: not-allowed; }
+.prompt-enhancer button:focus-visible, .prompt-enhancer textarea:focus-visible, .prompt-enhancer summary:focus-visible { outline: 2px solid #0052d9; outline-offset: 2px; }
+.prompt-enhancer summary { cursor: pointer; padding: 5px 0; }
+.prompt-enhancer ul { margin: 5px 0; padding-left: 20px; line-height: 1.7; }
+.prompt-enhancer__comparison { margin-top: 10px; max-height: 380px; overflow: auto; padding-right: 4px; }
+.prompt-enhancer__original { padding: 8px; background: #eaf0f9; border-radius: 7px; }
+.prompt-enhancer__original p { white-space: pre-wrap; }
+.prompt-enhancer__directions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 10px; margin-top: 10px; }
+.prompt-enhancer__directions article { border: 1px solid #d8e3f3; background: white; border-radius: 8px; padding: 10px; min-width: 0; }
+.prompt-enhancer label, .prompt-enhancer label span { display: block; margin-top: 6px; }
+.prompt-enhancer textarea { width: 100%; min-height: 112px; box-sizing: border-box; resize: vertical; border: 1px solid #c7d4e5; border-radius: 6px; padding: 8px; font: inherit; line-height: 1.7; color: #26354d; background: white; }
+.prompt-enhancer__actions { margin-top: 10px; }
+.prompt-enhancer__warning { color: #865811; }
+.prompt-enhancer__error { color: #b42318; }

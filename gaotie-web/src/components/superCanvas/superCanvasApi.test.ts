@@ -8,6 +8,30 @@ const importApi = async (apiBaseUrl = 'http://api.test/') => {
 };
 
 describe('generateTransparentAsset', () => {
+  it('reads split progress lines and exposes the optimized prompt only in the result', async () => {
+    const trace = { originalPrompt: '龙', optimizedPrompt: '保留龙纹轮廓', mode: 'detail' };
+    const payload = [
+      { type: 'progress', stage: 'optimizing' },
+      { type: 'progress', stage: 'generating' },
+      { type: 'result', result: { imageUrl: '/a.png', taskId: '1', promptTrace: trace } },
+    ].map(item => JSON.stringify(item)).join('\n');
+    const bytes = new TextEncoder().encode(payload);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(new ReadableStream({ start(controller) {
+      for (let index = 0; index < bytes.length; index += 7) controller.enqueue(bytes.slice(index, index + 7));
+      controller.close();
+    } }), { headers: { 'content-type': 'application/x-ndjson' } })));
+    const { generateTransparentAsset } = await importApi();
+    const onProgress = vi.fn();
+    const result = await generateTransparentAsset({ prompt: '龙' }, { onProgress });
+    expect(onProgress.mock.calls.map(call => call[0])).toEqual(['optimizing', 'generating']);
+    expect(result.promptTrace).toEqual(trace);
+  });
+
+  it('does not treat interrupted streams as success', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"type":"progress","stage":"generating"}\n', { headers: { 'content-type': 'application/x-ndjson' } })));
+    const { generateTransparentAsset } = await importApi();
+    await expect(generateTransparentAsset({ prompt: '龙' }, { onProgress: vi.fn() })).rejects.toThrow('生成连接中断');
+  });
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
@@ -41,6 +65,7 @@ describe('generateTransparentAsset', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       'http://api.test/super-canvas/generate',
       {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -48,6 +73,66 @@ describe('generateTransparentAsset', () => {
           referenceImageUrl: 'https://example.com/ref.png',
         }),
       },
+    );
+  });
+
+  it('posts multiple reference image URLs when provided', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        imageUrl: '/generated/super-canvas/a.png',
+        taskId: 'task-1',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { generateTransparentAsset } = await importApi();
+
+    await generateTransparentAsset({
+      prompt: 'transparent dragon pattern',
+      referenceImageUrls: [
+        'https://example.com/ref-1.png',
+        'https://example.com/ref-2.png',
+      ],
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.test/super-canvas/generate',
+      expect.objectContaining({
+        body: JSON.stringify({
+          prompt: 'transparent dragon pattern',
+          referenceImageUrls: [
+            'https://example.com/ref-1.png',
+            'https://example.com/ref-2.png',
+          ],
+        }),
+      }),
+    );
+  });
+
+  it('passes an abort signal to the generation request', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        imageUrl: '/generated/super-canvas/a.png',
+        taskId: 'task-1',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { generateTransparentAsset } = await importApi();
+    const controller = new AbortController();
+
+    await generateTransparentAsset(
+      {
+        prompt: 'transparent dragon pattern',
+      },
+      { signal: controller.signal },
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://api.test/super-canvas/generate',
+      expect.objectContaining({
+        signal: controller.signal,
+      }),
     );
   });
 

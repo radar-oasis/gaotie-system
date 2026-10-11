@@ -1,0 +1,56 @@
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+build/
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+*.local
+
+# Private keys
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Large local asset library. Use Git LFS before tracking this directory.
+images/
+
+# Local runtime state, backups, and generated outputs
+.logs/
+.superpowers/
+tmp/
+output/
+gaotie-server/generated/
+*.tsbuildinfo
+
+# Local research documents and source datasets
+/项目信息补充/
+/案例知识图谱信息/
+/硕士生中期检查-Mid-term+Exam+for+Master.pdf

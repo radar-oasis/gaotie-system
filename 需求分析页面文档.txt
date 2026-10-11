@@ -1,0 +1,65 @@
+
+
+📋 AI 辅助设计共创工作台 - 前端开发需求文档
+1. 项目概述 (Project Overview)
+目标： 开发一个用于“人机共创设计”的 Web 工作台页面。
+核心交互模式： “左侧沉浸式聊天发散 + 右侧灵感收集箱（购物车模式）”。用户通过左侧与 AI 对话发散设计灵感，点击 AI 回复中的【标签】，将其动态添加到右侧的【目标清单】中，最终打包提交。
+布局要求： 全屏高度 (100vh)，无全局滚动条，采用左右分屏布局（比例约 65% : 35%）。
+
+2. 核心状态管理 (State Management)
+请开发智能体优先构建以下全局状态模型（推荐使用 Context API、Redux 或 Pinia）：
+chatHistory (聊天记录数组): 存储左右侧对话。
+数据结构参考：{ id: string, role: 'user' | 'ai', type: 'text' | 'rich-card', content: string, tags?: string[] }
+selectedTags (已选标签数组): 存储用户在聊天流中点击选中，并展示在右侧面板的标签。
+数据结构参考：{ id: string, label: string, category: string }
+isInputting (输入状态): 控制发送按钮的 Loading 状态。
+
+3. 页面布局与组件拆解 (Component Breakdown)
+3.1 容器布局 (Global Container)
+样式： flex, h-screen, w-full, overflow-hidden。
+包含两个子区块：LeftWorkspace 和 RightPanel。
+3.2 左侧工作区 (LeftWorkspace) - 占比 65%
+负责呈现对话流和输入控制。整体为 flex-col 布局。
+Header (顶部导航)： 固定高度，展示页面标题“需求深度解读”。
+ChatStream (对话流滚动区)：
+占据剩余空间 flex-1，设置 overflow-y-auto（需隐藏原生滚动条样式）。
+需实现自动滚动到底部的逻辑（当有新消息加入时）。
+子组件 ChatMessageItem：
+判断 role 渲染不同样式（用户在右/蓝色气泡，AI 在左/白色卡片）。
+特殊 AI 消息卡片 (RichCard)： 除了文本，还包含结构化的硬约束列表，以及一组可交互的标签按钮 (TagButton)。
+InputArea (底部输入区)：
+固定在底部 (sticky 或 Flex 底部)。
+包含一个悬浮的快捷指令组件 (QuickAction)：“✨ 结束发散，生成最终总结”。点击后向对话流发送特定指令。
+包含多行文本输入框 (Textarea)：支持回车发送（Shift+Enter 换行）。
+包含发送按钮 (SendButton)。
+3.3 右侧收集箱 (RightPanel) - 占比 35%
+负责展示用户的最终决策结果。整体为 flex-col 布局，背景色与左侧需有轻微区分（或增加左侧阴影 shadow-[-10px_0_20px_rgba(...)]）以体现层级。
+PanelHeader： 固定顶部，标题“当前设计目标清单”。
+SelectedTagsList (选中标签展示区)：
+占据剩余空间 flex-1，可独立滚动。
+订阅 selectedTags 状态。
+子组件 SelectedTagItem： 展示标签名称，并包含一个删除按钮（点击后从 selectedTags 移除对应项）。
+PanelFooter：
+固定在底部。
+包含一个醒目的主操作按钮 (PrimaryCTA)：“确认目标，开始生成设计”。
+交互逻辑： 当 selectedTags 为空时，该按钮应处于 disabled 状态；有数据时高亮可用。
+
+4. 核心交互链路说明 (Interaction Flows)
+智能体在编写事件处理函数时，请严格遵循以下逻辑：
+标签加入动作 (Add Tag Flow)：
+触发： 用户点击左侧 AI 聊天气泡中的 TagButton（例如“冰雪蓝渐变”）。
+处理： 检查 selectedTags 中是否已存在该标签。若无，则追加至数组。
+UI 表现： 左侧被点击的 TagButton 状态变为“已添加”（改变颜色或禁用），右侧 SelectedTagsList 实时渲染出该标签。(进阶要求：若支持，请在此时实现一个简单的元素飞入右侧的 CSS 动效)。
+标签移除动作 (Remove Tag Flow)：
+触发： 用户点击右侧 SelectedTagItem 上的删除(x)图标。
+处理： 从 selectedTags 数组中移除该项。
+UI 表现： 左侧聊天流中对应的 TagButton 恢复为“未添加”的初始可点击状态。
+总结指令提交 (Summarize Action)：
+触发： 用户点击输入框上方的“✨ 结束发散”按钮。
+处理： 将当前 selectedTags 的数据组合成 Prompt，作为一条用户消息插入 chatHistory，并调用后端总结接口。
+5. UI/UX 设计规范参考 (UI Specs)
+主色调： 品牌蓝 (例如 Tailwind 的 blue-600 / #2563eb)。
+边框与阴影： 大量使用微小的圆角 (rounded-xl 或 rounded-2xl) 和轻微的阴影 (shadow-sm) 来构建卡片质感。尽量避免生硬的纯黑边框，使用 gray-200 级别的浅灰边框。
+状态反馈： 所有的按钮、标签都必须有清晰的 hover 态和 active 态响应。
+
+

@@ -4,7 +4,10 @@ import {
   createImageLayer,
   getLayerBounds,
   resolveDropPoint,
+  resizeImageLayer,
+  rotateImageLayer,
   scaleImageLayer,
+  updateImageLayerCrop,
 } from './layerMath';
 
 describe('layerMath', () => {
@@ -33,6 +36,35 @@ describe('layerMath', () => {
     expect(layer).not.toHaveProperty('naturalHeight');
   });
 
+  it('keeps source pattern metadata when creating a canvas layer', () => {
+    const layer = createImageLayer({
+      id: 'layer-1',
+      name: '飞凤纹',
+      src: '/images/phoenix.png',
+      dropPoint: { x: 300, y: 200 },
+      naturalWidth: 200,
+      naturalHeight: 100,
+      sourcePattern: {
+        id: 'pattern-1',
+        name: '飞凤纹',
+        imageUrl: '/images/phoenix.png',
+        dynasty: '唐代',
+        description: '飞凤纹样',
+        carriers: ['金银器'],
+        materials: ['金'],
+        motifs: ['凤纹'],
+        layouts: ['连续纹样'],
+      },
+    });
+
+    expect(layer.sourcePattern).toMatchObject({
+      id: 'pattern-1',
+      name: '飞凤纹',
+      motifs: ['凤纹'],
+      carriers: ['金银器'],
+    });
+  });
+
   it('scales an image layer around its center', () => {
     const layer = createImageLayer({
       id: 'layer-1',
@@ -50,6 +82,56 @@ describe('layerMath', () => {
       top: 0,
       right: 200,
       bottom: 200,
+    });
+  });
+
+  it('rotates and resizes image layers around their center', () => {
+    const layer = createImageLayer({
+      id: 'layer-1',
+      name: '纹样',
+      src: '/images/a.png',
+      dropPoint: { x: 100, y: 100 },
+      naturalWidth: 200,
+      naturalHeight: 100,
+    });
+
+    const rotated = rotateImageLayer(layer, 45);
+    const resized = resizeImageLayer(rotated, { width: 300, height: 90 });
+
+    expect(rotated.rotation).toBe(45);
+    expect(resized).toMatchObject({
+      rotation: 45,
+      x: -50,
+      y: 55,
+      width: 300,
+      height: 90,
+    });
+  });
+
+  it('clamps crop values so a visible image area remains', () => {
+    const layer = createImageLayer({
+      id: 'layer-1',
+      name: '纹样',
+      src: '/images/a.png',
+      dropPoint: { x: 100, y: 100 },
+      naturalWidth: 200,
+      naturalHeight: 100,
+    });
+
+    const cropped = updateImageLayerCrop(layer, 'left', 0.4);
+    const clamped = updateImageLayerCrop(cropped, 'right', 0.8);
+
+    expect(cropped.crop).toEqual({
+      left: 0.4,
+      right: 0,
+      top: 0,
+      bottom: 0,
+    });
+    expect(clamped.crop).toEqual({
+      left: 0.4,
+      right: 0.55,
+      top: 0,
+      bottom: 0,
     });
   });
 

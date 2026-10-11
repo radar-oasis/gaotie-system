@@ -2,12 +2,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CanvasLayer } from './types';
 
 type FakeCanvasContext = {
+  fillStyle: string;
   strokeStyle: string;
   lineWidth: number;
   lineCap: CanvasLineCap;
   lineJoin: CanvasLineJoin;
   globalAlpha: number;
   translate: ReturnType<typeof vi.fn>;
+  rotate: ReturnType<typeof vi.fn>;
+  scale: ReturnType<typeof vi.fn>;
+  save: ReturnType<typeof vi.fn>;
+  restore: ReturnType<typeof vi.fn>;
+  fillRect: ReturnType<typeof vi.fn>;
   beginPath: ReturnType<typeof vi.fn>;
   moveTo: ReturnType<typeof vi.fn>;
   lineTo: ReturnType<typeof vi.fn>;
@@ -16,12 +22,18 @@ type FakeCanvasContext = {
 };
 
 const createContext = (): FakeCanvasContext => ({
+  fillStyle: '',
   strokeStyle: '',
   lineWidth: 0,
   lineCap: 'butt',
   lineJoin: 'miter',
   globalAlpha: 1,
   translate: vi.fn(),
+  rotate: vi.fn(),
+  scale: vi.fn(),
+  save: vi.fn(),
+  restore: vi.fn(),
+  fillRect: vi.fn(),
   beginPath: vi.fn(),
   moveTo: vi.fn(),
   lineTo: vi.fn(),
@@ -120,6 +132,8 @@ describe('exportLayersToPng', () => {
     expect(canvas.width).toBe(10);
     expect(canvas.height).toBe(1);
     expect(canvas.getContext).toHaveBeenCalledWith('2d');
+    expect(context.fillStyle).toBe('#ffffff');
+    expect(context.fillRect).toHaveBeenCalledWith(0, 0, 10, 1);
     expect(context.translate).toHaveBeenCalledWith(-5, 3);
     expect(context.strokeStyle).toBe('#123456');
     expect(context.lineWidth).toBe(4);
@@ -135,13 +149,77 @@ describe('exportLayersToPng', () => {
         crossOrigin: 'anonymous',
         src: 'https://cdn.example.com/asset.png',
       }),
-      12,
-      14,
+      0,
+      0,
+      120,
+      80,
+      -60,
+      -40,
       120,
       80,
     );
     expect(context.globalAlpha).toBe(1);
     expect(canvas.toDataURL).toHaveBeenCalledWith('image/png');
+  });
+
+  it('draws cropped and rotated images around the layer center', async () => {
+    const context = createContext();
+    stubCanvas(context);
+    class SizedImage {
+      crossOrigin = '';
+      naturalWidth = 400;
+      naturalHeight = 200;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      private source = '';
+
+      get src() {
+        return this.source;
+      }
+
+      set src(value: string) {
+        this.source = value;
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    vi.stubGlobal('Image', SizedImage);
+    const { exportLayersToPng } = await import('./renderCanvas');
+    const layers: CanvasLayer[] = [
+      {
+        id: 'image-1',
+        type: 'image',
+        name: 'asset',
+        src: 'https://cdn.example.com/asset.png',
+        x: 10,
+        y: 20,
+        width: 100,
+        height: 50,
+        rotation: 30,
+        flipX: true,
+        flipY: true,
+        opacity: 0.8,
+        crop: { left: 0.25, right: 0.1, top: 0.2, bottom: 0.1 },
+      },
+    ];
+
+    await exportLayersToPng(layers, { x: 0, y: 0, width: 200, height: 100 });
+
+    expect(context.save).toHaveBeenCalled();
+    expect(context.translate).toHaveBeenCalledWith(60, 45);
+    expect(context.rotate).toHaveBeenCalledWith(Math.PI / 6);
+    expect(context.scale).toHaveBeenCalledWith(-1, -1);
+    expect(context.drawImage).toHaveBeenCalledWith(
+      expect.any(SizedImage),
+      100,
+      40,
+      260,
+      140,
+      -50,
+      -25,
+      100,
+      50,
+    );
+    expect(context.restore).toHaveBeenCalled();
   });
 
   it('throws when the 2D context is not available', async () => {

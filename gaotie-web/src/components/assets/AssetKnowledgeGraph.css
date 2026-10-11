@@ -1,0 +1,42 @@
+.asset-knowledge{padding-top:22px}
+.asset-knowledge button{border:1px solid #dfe5ee;border-radius:8px;background:#fff;color:#354860;padding:8px 12px;cursor:pointer}
+.asset-knowledge button:focus-visible{outline:2px solid #626773;outline-offset:3px}
+.asset-knowledge button:disabled{opacity:.55;cursor:default}
+.asset-knowledge button.asset-primary{background:#d6e7ae;border-color:#b5ca86}
+.asset-knowledge__hint{font-size:12px;color:#737784;margin:14px 0 22px}
+.asset-knowledge__legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12px;color:#6b7788}
+.asset-knowledge__legend span:before{content:'';display:inline-block;width:10px;height:10px;border-radius:50%;background:#a9ddf4;margin-right:6px}
+.asset-knowledge__legend span:nth-child(2):before{background:#c5d78f}
+.asset-knowledge__legend span:nth-child(3):before{background:#c9bffc}
+.asset-knowledge__legend small{margin-left:auto}
+.asset-knowledge__workspace{display:grid;grid-template-columns:minmax(0,1fr) 260px;margin-top:12px;border:1px solid #e3e8ef;border-radius:18px;overflow:hidden;background:#fff}
+.asset-knowledge__workspace .neo4j-native__stage{height:560px}
+.asset-knowledge__workspace .neo4j-native__tools button{padding:7px 10px;font-size:12px}
+.asset-knowledge aside{border-left:1px solid #edf0f4;padding:18px;max-height:560px;overflow:auto;font-size:13px;color:#6b7788}
+.asset-knowledge aside h3{line-height:1.6;font-size:14px;overflow-wrap:anywhere}
+.asset-knowledge aside button{margin:8px 0}
+.asset-knowledge aside details{margin-top:22px}
+.asset-knowledge aside summary{cursor:pointer;color:#6b7788}
+.asset-knowledge .asset-knowledge__node{display:block;border:0;text-align:left;width:100%;background:#f3f5f8;font-size:12px}
+.asset-knowledge__results{margin-top:24px}
+.asset-knowledge__results h3{font-size:15px}
+.asset-knowledge__results article{padding:14px 0;border-bottom:1px solid #e1e5eb}
+.asset-knowledge__results button{padding:0;border:0;background:transparent;font-weight:600}
+.asset-knowledge__results button span{font-weight:400;color:#737784;margin-left:15px;font-size:12px}
+.asset-knowledge__results p{font-size:12px;color:#788391;overflow-wrap:anywhere}
+.asset-knowledge__preview{display:block;width:100%;height:140px;object-fit:contain;background:#fff;border:1px solid #e3e8ef;border-radius:9px;margin:12px 0}
+.asset-knowledge__conversation{margin-bottom:22px}
+.asset-knowledge__messages{max-height:220px;overflow:auto;display:grid;gap:12px;margin-bottom:14px;scroll-behavior:smooth}
+.asset-knowledge__message{max-width:92%;padding:16px 20px;background:#fff;border:1px solid #e0e2e8;border-radius:22px;font-size:14px;color:#25262b}
+.asset-knowledge__message--user{justify-self:end;background:#e9ebf1;border:0}
+.asset-knowledge__message small{font-size:11px;color:#737784}
+.asset-knowledge__message p{margin:5px 0 0;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere}
+.asset-knowledge__pending{font-size:13px;color:#737784;margin:0 0 12px}
+/* Shared workspace-composer and workspace-send supply the common dialogue appearance. */
+.asset-knowledge__search.workspace-composer{display:flex;flex-wrap:nowrap;align-items:flex-end}
+.asset-knowledge__search label{display:flex;flex:1;min-width:0}
+.asset-knowledge__search textarea{width:100%;min-width:0}
+.asset-knowledge__reset{margin-top:12px}
+.asset-knowledge__conversation .asset-knowledge__hint{margin:12px 0 0}
+.asset-knowledge__conversation .asset-error{margin-top:12px;display:flex;gap:14px;align-items:center;font-size:13px}
+@media(max-width:800px){.asset-knowledge__workspace{grid-template-columns:1fr}.asset-knowledge__workspace .neo4j-native__stage{height:420px}.asset-knowledge aside{border-left:0;border-top:1px solid #edf0f4;max-height:220px}}
